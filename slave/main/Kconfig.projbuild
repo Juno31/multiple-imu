@@ -1,0 +1,53 @@
+menu "IMU Slave Configuration"
+
+    config SLAVE_MASTER_MAC
+        string "Master MAC address (XX:XX:XX:XX:XX:XX)"
+        default "AA:BB:CC:DD:EE:FF"
+        help
+            Unicast target for ESP-NOW transmissions.
+            Flash the master firmware first and read its MAC from the serial
+            log ("Master MAC: XX:XX:XX:XX:XX:XX"), then enter it here.
+
+    config SLAVE_I2C_SDA_PIN
+        int "BNO055 I2C SDA GPIO"
+        default 6
+        range 0 21
+        help
+            GPIO number connected to BNO055 SDA.
+            XIAO ESP32C3: GPIO6 is the dedicated SDA pin.
+
+    config SLAVE_I2C_SCL_PIN
+        int "BNO055 I2C SCL GPIO"
+        default 7
+        range 0 21
+        help
+            GPIO number connected to BNO055 SCL.
+            XIAO ESP32C3: GPIO7 is the dedicated SCL pin.
+
+    config SLAVE_BNO055_ADDR
+        hex "BNO055 I2C address"
+        default 0x28
+        help
+            0x28 when the ADDR pin is LOW (default Adafruit breakout).
+            0x29 when the ADDR pin is pulled HIGH.
+
+    config SLAVE_SAMPLE_RATE_HZ
+        int "Sample rate (Hz)"
+        default 50
+        range 1 100
+        help
+            How often the BNO055 is read and a packet is sent to the master.
+            The BNO055 NDOF fusion output refreshes at 100 Hz maximum; values
+            above that will not yield additional unique samples.
+
+    config SLAVE_ESPNOW_CHANNEL
+        int "Wi-Fi channel for ESP-NOW"
+        default 1
+        range 1 13
+        help
+            MUST match the channel of the Wi-Fi AP the master is connected to.
+            Check your router/AP admin panel for the 2.4 GHz channel in use
+            and set the same value here.  A mismatch means ESP-NOW packets
+            will not reach the master.
+
+endmenu

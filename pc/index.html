@@ -1,0 +1,2699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IMU Dashboard</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   Toss Design System — IMU Dashboard (Enhanced)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg-primary:    #17171c;
+  --bg-secondary:  #1e1e24;
+  --bg-tertiary:   #26262d;
+  --bg-elevated:   #2c2c35;
+
+  --text-primary:  #f2f4f6;
+  --text-secondary:#8b95a1;
+  --text-tertiary: #6b7684;
+  --text-disabled: #4e5968;
+
+  --blue:          #3182f6;
+  --blue-hover:    #1b64da;
+  --blue-dim:      rgba(49,130,246,0.12);
+  --blue-glow:     rgba(49,130,246,0.25);
+  --green:         #03b26c;
+  --green-dim:     rgba(3,178,108,0.12);
+  --green-glow:    rgba(3,178,108,0.25);
+  --red:           #f04452;
+  --red-dim:       rgba(240,68,82,0.12);
+  --amber:         #fe9800;
+  --amber-dim:     rgba(254,152,0,0.12);
+
+  --radius-sm:     8px;
+  --radius-md:     12px;
+  --radius-lg:     16px;
+  --radius-xl:     20px;
+
+  --shadow-sm:     0 1px 4px rgba(0,0,0,0.35);
+  --shadow-md:     0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg:     0 8px 32px rgba(0,0,0,0.5);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Toss Product Sans', -apple-system, BlinkMacSystemFont,
+               'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────────────── */
+#sidebar {
+  width: 296px;
+  min-width: 296px;
+  background: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 1px 0 0 rgba(255,255,255,0.04);
+}
+
+#sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 14px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.badge {
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ── Master status ── */
+.master-card {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 14px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.dot-off   { background: var(--red); }
+.dot-on    { background: var(--green); box-shadow: 0 0 0 3px var(--green-dim); }
+.dot-amber { background: var(--amber); box-shadow: 0 0 0 3px var(--amber-dim); }
+
+.status-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-left: 18px;
+}
+
+/* ── Scan indicator ── */
+#scan-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-disabled);
+  padding: 10px 0;
+}
+
+.scan-ring {
+  position: relative;
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+}
+.scan-ring::before,
+.scan-ring::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--blue-dim);
+  border-radius: 50%;
+  animation: scan-ring 2s ease-out infinite;
+}
+.scan-ring::after {
+  animation-delay: 1s;
+}
+.scan-dot-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--blue);
+  opacity: 0.6;
+}
+
+@keyframes scan-ring {
+  0%   { transform: scale(0.3); opacity: 0.8; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* ── Sub-section headers ── */
+.sub-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  margin: 4px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Node cards ── */
+.node-card {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 12px 13px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+  user-select: none;
+  border-left: 3px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+.node-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+}
+.node-card:hover { background: var(--bg-elevated); box-shadow: var(--shadow-sm); }
+.node-card:hover::after { opacity: 1; }
+.node-card:active { transform: scale(0.985); }
+
+.node-card.state-streaming { border-left-color: var(--green); }
+.node-card.state-connected { border-left-color: var(--amber); }
+.node-card.state-idle      { border-left-color: var(--text-disabled); }
+
+.node-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.node-indicator {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.node-name {
+  font-weight: 700;
+  font-size: 14px;
+  flex: 1;
+  letter-spacing: -0.01em;
+}
+
+.node-ago {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.node-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.node-state-pill {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.pill-idle      { background: var(--bg-elevated); color: var(--text-tertiary); }
+.pill-connected { background: var(--amber-dim); color: var(--amber); }
+.pill-streaming { background: var(--green-dim); color: var(--green); }
+
+.calib-bars {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  margin-left: auto;
+}
+.calib-bar {
+  width: 3px; height: 8px;
+  border-radius: 2px;
+  background: var(--bg-elevated);
+  transition: background 0.3s;
+}
+.calib-bar.lit-low    { background: var(--red); }
+.calib-bar.lit-mid    { background: var(--amber); }
+.calib-bar.lit-high   { background: var(--green); }
+
+.node-btns {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+button {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.1s, box-shadow 0.12s;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+button:hover   { background: #36363f; }
+button:active  { transform: scale(0.965); }
+button.primary { background: var(--blue); color: #fff; }
+button.primary:hover { background: var(--blue-hover); box-shadow: 0 2px 8px var(--blue-glow); }
+button.success { background: var(--green-dim); color: var(--green); }
+button.success:hover { background: rgba(3,178,108,0.22); }
+button.danger  { background: var(--bg-elevated); color: var(--text-secondary); }
+button.danger:hover { background: var(--red-dim); color: var(--red); }
+button.warning { background: var(--amber-dim); color: var(--amber); }
+button.warning:hover { background: rgba(254,152,0,0.22); }
+button.full { width: 100%; }
+button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+button.sm { padding: 5px 10px; font-size: 12px; }
+
+/* ── Segment control (filter) ── */
+.seg-ctrl {
+  display: flex;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+.seg-btn {
+  flex: 1;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 6px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.seg-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.seg-btn.active { background: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+
+.rate-btns { display: flex; gap: 5px; }
+
+/* ── Recording ── */
+.rec-field { margin-bottom: 10px; }
+.rec-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.rec-field input {
+  width: 100%;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  transition: box-shadow 0.15s;
+}
+.rec-field input::placeholder { color: var(--text-disabled); }
+.rec-field input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--blue);
+}
+
+#rec-btn.recording {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(240,68,82,0.3);
+}
+#rec-btn.recording:hover {
+  background: #d93444;
+}
+
+#rec-status {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red);
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: var(--red-dim);
+  border-radius: var(--radius-sm);
+}
+#rec-dot { animation: blink 1s step-start infinite; }
+#rec-timer { font-variant-numeric: tabular-nums; }
+#rec-rows {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  margin-left: auto;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── Pulse animation (streaming dot) ── */
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 var(--green-glow); }
+  60%  { box-shadow: 0 0 0 5px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.pulse { animation: pulse 1.6s ease-out infinite; }
+
+
+/* ── Node name inline edit ── */
+.node-name-edit {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  width: 100%;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--blue);
+}
+.node-name { cursor: text; }
+.node-name-hex {
+  font-size: 10px;
+  color: var(--text-disabled);
+  font-weight: 600;
+  margin-left: 5px;
+}
+
+/* ── Main area ── */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* ── Header ── */
+#header {
+  background: var(--bg-secondary);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  height: 52px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 4px;
+}
+.header-logo-icon {
+  width: 28px; height: 28px;
+  background: var(--blue-dim);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+#header h1 {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+  letter-spacing: -0.03em;
+}
+
+.header-sep {
+  width: 1px;
+  height: 20px;
+  background: rgba(255,255,255,0.08);
+  margin: 0 2px;
+}
+
+.header-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border-radius: 20px;
+  padding: 5px 13px;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.header-chip .chip-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  transition: background 0.3s;
+}
+.chip-dot.dot-on  { background: var(--green); }
+.chip-dot.dot-off { background: var(--red); }
+
+.header-spacer { flex: 1; }
+
+#sync-btn-header {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+#sync-btn-header:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+/* ── IMU Grid ── */
+#imu-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 18px 24px;
+}
+
+/* ── Empty state ── */
+#imu-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-disabled);
+  gap: 12px;
+}
+.empty-radar {
+  position: relative;
+  width: 80px; height: 80px;
+}
+.empty-radar-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(49,130,246,0.15);
+  border-radius: 50%;
+  animation: radar-pulse 2.4s ease-out infinite;
+}
+.empty-radar-ring:nth-child(2) { animation-delay: 0.8s; }
+.empty-radar-ring:nth-child(3) { animation-delay: 1.6s; }
+.empty-radar-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px; height: 10px;
+  background: var(--blue);
+  border-radius: 50%;
+  opacity: 0.4;
+}
+@keyframes radar-pulse {
+  0%   { transform: scale(0.2); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.empty-main {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: -0.02em;
+}
+.empty-sub {
+  font-size: 12px;
+  color: var(--text-disabled);
+}
+.empty-hint {
+  font-size: 11px;
+  color: var(--text-disabled);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  display: flex;
+  gap: 8px;
+}
+.kbd {
+  background: var(--bg-elevated);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-family: ui-monospace, monospace;
+}
+
+/* ── IMU Row ── */
+.imu-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 10px 12px;
+  min-height: 0;
+  max-height: 267px;
+  height: 267px;
+  transition: box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.imu-row::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  border-radius: 3px 0 0 3px;
+  background: var(--node-color, var(--blue));
+  opacity: 0.7;
+}
+.imu-row:hover { box-shadow: var(--shadow-sm); }
+
+.imu-row-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  min-width: 20px;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+/* ── 3D board area ── */
+.imu-cube-wrap {
+  width: 128px;
+  min-width: 128px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.imu-cube-wrap canvas {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  display: block;
+}
+.imu-cube-info {
+  font-size: 9px;
+  color: var(--text-disabled);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 120px;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, 'Courier New', monospace;
+}
+
+.cube-euler {
+  display: flex;
+  gap: 0;
+  width: 120px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.euler-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 2px;
+  gap: 1px;
+}
+.euler-item + .euler-item {
+  border-left: 1px solid rgba(255,255,255,0.05);
+}
+.euler-axis {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.euler-x { color: #f04452; }
+.euler-y { color: #03b26c; }
+.euler-z { color: #3182f6; }
+.euler-label { font-size: 8px; color: var(--text-disabled); letter-spacing: 0.03em; }
+.euler-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, 'Courier New', monospace;
+}
+
+/* ── Plot area ── */
+.imu-plots {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  min-width: 0;
+}
+
+.imu-plot-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.imu-plot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+.imu-plot-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: -0.01em;
+}
+.plot-live-vals {
+  display: flex;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, 'Courier New', monospace;
+}
+
+.imu-plot-wrap canvas {
+  flex: 1;
+  width: 100%;
+  display: block;
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  min-height: 52px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #4a4a55; }
+
+/* ── Keyboard hint bar ── */
+#kbd-hints {
+  display: flex;
+  gap: 14px;
+  padding: 8px 18px;
+  background: var(--bg-secondary);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  flex-shrink: 0;
+}
+.kbd-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--text-disabled);
+}
+
+/* ── Toast notifications ── */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  animation: toast-in 0.25s ease-out forwards;
+  max-width: 280px;
+}
+.toast.fading { animation: toast-out 0.3s ease-in forwards; }
+.toast-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.toast-text { flex: 1; }
+.toast-sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  display: block;
+  margin-top: 1px;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(6px) scale(0.96); }
+}
+
+/* ── Cutoff slider ── */
+input[type="range"] {
+  accent-color: var(--blue);
+  height: 4px;
+  cursor: pointer;
+}
+
+/* ── Toggle switch ── */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 32px; height: 18px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-elevated);
+  border-radius: 9px;
+  transition: background 0.2s;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  left: 2px; top: 2px;
+  width: 14px; height: 14px;
+  background: var(--text-tertiary);
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+.toggle-switch input:checked + .toggle-blue  { background: var(--blue-dim); }
+.toggle-switch input:checked + .toggle-amber { background: var(--amber-dim); }
+.toggle-switch input:checked + .toggle-track::after { transform: translateX(14px); background: var(--text-primary); }
+.toggle-switch input:checked + .toggle-blue::after  { background: var(--blue); }
+.toggle-switch input:checked + .toggle-amber::after { background: var(--amber); }
+
+/* ── Filter rows ── */
+.filt-row {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 6px;
+}
+.filt-row:last-child { margin-bottom: 0; }
+.filt-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.filt-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex: 1;
+}
+.filt-hz-val {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 42px;
+  text-align: right;
+}
+.filt-slider {
+  width: 100%;
+  display: block;
+}
+
+/* ── Port Selector ── */
+.port-selector {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.port-row {
+  display: flex;
+  gap: 5px;
+}
+#port-select {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7684'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 26px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#port-select:focus { outline: none; box-shadow: 0 0 0 2px var(--blue); }
+#port-select option { background: var(--bg-secondary); color: var(--text-primary); }
+#port-connect-btn.connected { background: var(--green-dim); color: var(--green); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Time Sync Overlay
+   ═══════════════════════════════════════════════════════════════════════ */
+#sync-overlay {
+  position: fixed;
+  top: 60px; right: 18px;
+  width: 340px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 900;
+  display: none;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px);
+}
+#sync-overlay.visible { display: block; }
+
+.sync-ov-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.sync-ov-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sync-ov-title .ov-icon {
+  width: 18px; height: 18px;
+  border-radius: 6px;
+  background: var(--blue-dim);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+.sync-ov-close {
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  transition: background 0.12s;
+}
+.sync-ov-close:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+.sync-ov-body { padding: 12px 16px 16px; }
+
+.sync-ov-section {
+  margin-bottom: 14px;
+}
+.sync-ov-section:last-child { margin-bottom: 0; }
+
+.sync-ov-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+/* Node rows */
+.sync-node-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+}
+.sync-node-row:last-child { margin-bottom: 0; }
+
+.sync-node-id {
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 42px;
+  font-variant-numeric: tabular-nums;
+}
+.sync-node-stats {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.sync-node-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.badge-excellent { background: var(--green-dim); color: var(--green); }
+.badge-good      { background: var(--blue-dim); color: var(--blue); }
+.badge-warning   { background: var(--amber-dim); color: var(--amber); }
+.badge-bad       { background: var(--red-dim); color: var(--red); }
+.badge-nosync    { background: var(--bg-elevated); color: var(--text-disabled); }
+
+.sync-node-rate {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  min-width: 52px;
+  text-align: right;
+}
+
+/* Inter-node section */
+.sync-internode {
+  padding: 10px 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sync-internode-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.sync-internode-val {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Toggle button in header */
+#sync-overlay-toggle {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  letter-spacing: 0;
+}
+#sync-overlay-toggle.active {
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+<div id="sidebar">
+<div id="sidebar-scroll">
+
+  <!-- Master Status -->
+  <div>
+    <div class="section-title">Master MCU</div>
+    <div class="master-card">
+      <div class="status-row">
+        <div class="status-dot dot-off" id="ws-dot"></div>
+        <span id="ws-label">Disconnected</span>
+      </div>
+      <div class="status-meta">
+        <span id="serial-status">Serial: --</span>
+        <span id="espnow-status">ESP-NOW Ch: --</span>
+      </div>
+      <div class="port-selector">
+        <div class="port-row">
+          <select id="port-select">
+            <option value="">Select port...</option>
+          </select>
+          <button class="sm" id="port-refresh-btn" onclick="refreshPorts()" title="Scan ports">⟳</button>
+        </div>
+        <button class="sm full" id="port-connect-btn" onclick="togglePortConnection()">Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Devices -->
+  <div>
+    <div class="section-title">
+      Devices
+      <span class="badge" id="node-count">0</span>
+      <button class="sm" style="margin-left:auto;padding:3px 8px;font-size:11px" onclick="refreshDevices()" title="Clear stale &amp; rescan">⟳</button>
+    </div>
+
+    <div id="scan-row">
+      <div class="scan-ring">
+        <div class="scan-dot-center"></div>
+      </div>
+      <span id="scan-label" style="font-size:12px">Scanning for nodes...</span>
+    </div>
+
+    <div id="sect-discovered" style="display:none">
+      <div class="sub-title">Discovered <span class="badge" id="cnt-disc">0</span></div>
+      <div id="list-discovered"></div>
+      <button class="primary full" style="margin-top:6px" id="btn-connect-all" onclick="connectAll()">Connect All</button>
+    </div>
+
+    <div id="sect-active" style="display:none">
+      <div class="sub-title">Active <span class="badge" id="cnt-active">0</span></div>
+      <div id="list-active"></div>
+      <div style="display:flex;gap:5px;margin-top:6px">
+        <button class="success" style="flex:1" id="btn-start-all" onclick="startAll()">Start All</button>
+        <button class="danger"  style="flex:1" id="btn-stop-all" onclick="stopAll()">Stop All</button>
+        <button style="flex:1" id="btn-disc-all" onclick="disconnectAll()">Disc All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sample Rate -->
+  <div>
+    <div class="section-title">Sample Rate</div>
+    <div class="rate-btns">
+      <button onclick="setRate(50)">50 Hz</button>
+      <button onclick="setRate(100)" class="primary">100 Hz</button>
+      <button onclick="setRate(200)">200 Hz</button>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div>
+    <div class="section-title">Display Filter</div>
+    <div class="seg-ctrl">
+      <button class="seg-btn active" id="filt-none-btn" onclick="setFilterMode('none')">None</button>
+      <button class="seg-btn" id="filt-apply-btn" onclick="setFilterMode('apply')">Apply Filters</button>
+    </div>
+    <div id="filt-panel" style="display:none">
+      <div class="filt-row">
+        <div class="filt-row-head">
+          <label class="toggle-switch"><input type="checkbox" id="filt-lp-on" onchange="onFilterToggle()"><span class="toggle-track toggle-blue"></span></label>
+          <span class="filt-label">Low Pass</span>
+          <span id="filt-lp-val" class="filt-hz-val" style="color:var(--blue)">6 Hz</span>
+        </div>
+        <input type="range" id="filt-lp-slider" min="1" max="50" value="6" class="filt-slider" oninput="onFilterSliderChange()">
+      </div>
+      <div class="filt-row">
+        <div class="filt-row-head">
+          <label class="toggle-switch"><input type="checkbox" id="filt-hp-on" onchange="onFilterToggle()"><span class="toggle-track toggle-amber"></span></label>
+          <span class="filt-label">High Pass</span>
+          <span id="filt-hp-val" class="filt-hz-val" style="color:var(--amber)">0.5 Hz</span>
+        </div>
+        <input type="range" id="filt-hp-slider" min="0.1" max="50" value="0.5" step="0.1" class="filt-slider" oninput="onFilterSliderChange()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls (Sync) -->
+  <div>
+    <div class="section-title">Controls</div>
+    <button class="full" style="margin-bottom:8px" onclick="sendSync()">⟳ Sync All Clocks</button>
+  </div>
+
+  <!-- Recording -->
+  <div>
+    <div class="section-title">Recording</div>
+    <div class="rec-field">
+      <label>Filename</label>
+      <input type="text" id="rec-name" placeholder="auto (timestamp)">
+    </div>
+    <button id="rec-btn" class="primary full" onclick="toggleRecording()">Start Recording</button>
+    <div id="rec-status">
+      <span id="rec-dot">&#9679;</span>
+      <span id="rec-timer">0:00</span>
+      <span id="rec-rows">0 rows</span>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ── Main ────────────────────────────────────────────────────────────── -->
+<div id="main">
+
+  <div id="header">
+    <div class="header-logo">
+      <div class="header-logo-icon">⬡</div>
+      <h1>IMU Dashboard</h1>
+    </div>
+    <div class="header-sep"></div>
+    <div class="header-chip">
+      <div class="chip-dot dot-off" id="chip-serial-dot"></div>
+      <span id="chip-serial-label">Serial: --</span>
+    </div>
+    <div class="header-chip">
+      <span id="chip-nodes-label">Nodes: 0</span>
+    </div>
+    <div class="header-chip" id="chip-espnow">
+      <span>ESP-NOW Ch 1</span>
+    </div>
+    <div class="header-chip" id="chip-pps">
+      <div class="chip-dot dot-off" id="chip-pps-dot"></div>
+      <span id="chip-pps-label">0 pkt/s</span>
+    </div>
+    <div class="header-chip" id="chip-sync">
+      <div class="chip-dot dot-off" id="chip-sync-dot"></div>
+      <span id="chip-sync-label">Not synced</span>
+    </div>
+    <div class="header-chip" id="chip-rec" style="display:none">
+      <div class="chip-dot dot-off" id="chip-rec-dot" style="background:var(--red);animation:blink 1s step-start infinite"></div>
+      <span id="chip-rec-label" style="color:var(--red);font-weight:700">REC 0:00</span>
+    </div>
+    <div class="header-spacer"></div>
+    <button id="sync-overlay-toggle" onclick="toggleSyncOverlay()">T-Sync</button>
+    <button id="sync-btn-header" onclick="sendSync()">⟳ Sync</button>
+  </div>
+
+  <div id="imu-grid">
+    <div id="imu-empty">
+      <div class="empty-radar">
+        <div class="empty-radar-ring"></div>
+        <div class="empty-radar-ring"></div>
+        <div class="empty-radar-ring"></div>
+        <div class="empty-radar-center"></div>
+      </div>
+      <div class="empty-main">No IMU data yet</div>
+      <div class="empty-sub">Connect and start streaming from the sidebar</div>
+      <div class="empty-hint">
+        <span><span class="kbd">C</span> Connect all</span>
+        <span><span class="kbd">S</span> Start all</span>
+        <span><span class="kbd">X</span> Stop all</span>
+        <span><span class="kbd">R</span> Record</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="kbd-hints">
+    <div class="kbd-hint"><span class="kbd">C</span> Connect all</div>
+    <div class="kbd-hint"><span class="kbd">S</span> Start all</div>
+    <div class="kbd-hint"><span class="kbd">X</span> Stop all</div>
+    <div class="kbd-hint"><span class="kbd">R</span> Toggle record</div>
+    <div class="kbd-hint"><span class="kbd">Y</span> Sync clocks</div>
+    <div class="kbd-hint"><span class="kbd">T</span> Time sync overlay</div>
+  </div>
+
+</div>
+
+<!-- ── Time Sync Overlay ───────────────────────────────────────────────── -->
+<div id="sync-overlay">
+  <div class="sync-ov-header">
+    <div class="sync-ov-title">
+      <div class="ov-icon">T</div>
+      Time Sync Monitor
+    </div>
+    <button class="sync-ov-close" onclick="toggleSyncOverlay()">&times;</button>
+  </div>
+  <div class="sync-ov-body">
+    <div class="sync-ov-section">
+      <div class="sync-ov-label">Per-Node Latency &amp; Sample Rate</div>
+      <div id="sync-node-list">
+        <div style="font-size:12px;color:var(--text-disabled);padding:8px 0;">No streaming nodes</div>
+      </div>
+    </div>
+    <div class="sync-ov-section">
+      <div class="sync-ov-label">Inter-Node Sync Error</div>
+      <div id="sync-internode-container">
+        <div class="sync-internode">
+          <span class="sync-internode-label">Max delta</span>
+          <span class="sync-internode-val" id="sync-max-delta">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast container ─────────────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Config
+// ═══════════════════════════════════════════════════════════════════════════
+const WS_URL    = 'ws://localhost:8765';
+const HIST      = 200;
+const RECONNECT = 2000;
+const MAX_CANVASES_PER_FRAME = 6;
+const TARGET_FPS = 30;
+const FRAME_INTERVAL = 1000 / TARGET_FPS;
+
+const NODE_COLORS = ['#3182f6','#03b26c','#f04452','#a234c7','#fe9800','#18a5a5','#ff6b6b','#7048e8'];
+const PLOT_ACCEL_COLORS = ['#f04452','#03b26c','#3182f6'];
+const PLOT_GYRO_COLORS  = ['#f04452','#03b26c','#3182f6'];
+
+const CHART_BG    = '#17171c';
+const CHART_GRID  = 'rgba(255,255,255,0.05)';
+const CHART_LABEL = '#4e5968';
+const CHART_ZERO  = 'rgba(255,255,255,0.08)';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Ring Buffer
+// ═══════════════════════════════════════════════════════════════════════════
+class RingBuffer {
+  constructor(cap) {
+    this.buf = new Float32Array(cap);
+    this.cap = cap;
+    this.head = 0;
+    this.len = 0;
+  }
+  push(v) {
+    this.buf[this.head] = v;
+    this.head = (this.head + 1) % this.cap;
+    if (this.len < this.cap) this.len++;
+  }
+  toArray() {
+    const out = new Float32Array(this.len);
+    const start = (this.head - this.len + this.cap) % this.cap;
+    for (let i = 0; i < this.len; i++) out[i] = this.buf[(start + i) % this.cap];
+    return out;
+  }
+  last() { return this.len === 0 ? 0 : this.buf[(this.head - 1 + this.cap) % this.cap]; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── 2nd-Order Butterworth Filter (IIR biquad, Direct Form II Transposed)
+// ═══════════════════════════════════════════════════════════════════════════
+function butterCoeffs(type, cutoffHz, sampleHz) {
+  const wc = Math.tan(Math.PI * cutoffHz / sampleHz);
+  const wc2 = wc * wc;
+  const sqrt2 = Math.SQRT2;
+  const norm = 1 / (1 + sqrt2 * wc + wc2);
+  let b0, b1, b2;
+  if (type === 'lowpass') {
+    b0 = wc2 * norm; b1 = 2 * b0; b2 = b0;
+  } else {
+    b0 = norm; b1 = -2 * b0; b2 = b0;
+  }
+  const a1 = 2 * (wc2 - 1) * norm;
+  const a2 = (1 - sqrt2 * wc + wc2) * norm;
+  return { b0, b1, b2, a1, a2 };
+}
+
+function applyFilter(data, coeffs) {
+  if (!coeffs || data.length < 3) return data;
+  const { b0, b1, b2, a1, a2 } = coeffs;
+  const out = new Float32Array(data.length);
+  let z1 = 0, z2 = 0;
+  for (let i = 0; i < data.length; i++) {
+    const x = data[i];
+    const y = b0 * x + z1;
+    z1 = b1 * x - a1 * y + z2;
+    z2 = b2 * x - a2 * y;
+    out[i] = y;
+  }
+  return out;
+}
+
+let filterMode = 'none';  // 'none' or 'apply'
+let lpEnabled = false, hpEnabled = false;
+let lpCutoff = 6, hpCutoff = 0.5;
+let lpCoeffs = null, hpCoeffs = null;
+let currentSampleRate = 100;
+
+function recomputeFilter() {
+  const maxCutoff = currentSampleRate * 0.45;
+  lpCoeffs = (filterMode === 'apply' && lpEnabled) ? butterCoeffs('lowpass', Math.min(lpCutoff, maxCutoff), currentSampleRate) : null;
+  hpCoeffs = (filterMode === 'apply' && hpEnabled) ? butterCoeffs('highpass', Math.min(hpCutoff, maxCutoff), currentSampleRate) : null;
+  Object.values(nodeData).forEach(nd => { nd.dirty = true; });
+}
+
+function setFilterMode(mode) {
+  filterMode = mode;
+  document.getElementById('filt-none-btn').className = 'seg-btn' + (mode === 'none' ? ' active' : '');
+  document.getElementById('filt-apply-btn').className = 'seg-btn' + (mode === 'apply' ? ' active' : '');
+  document.getElementById('filt-panel').style.display = mode === 'none' ? 'none' : 'block';
+  recomputeFilter();
+}
+
+function onFilterToggle() {
+  lpEnabled = document.getElementById('filt-lp-on').checked;
+  hpEnabled = document.getElementById('filt-hp-on').checked;
+  recomputeFilter();
+}
+
+function onFilterSliderChange() {
+  lpCutoff = +document.getElementById('filt-lp-slider').value;
+  hpCutoff = +document.getElementById('filt-hp-slider').value;
+  document.getElementById('filt-lp-val').textContent = lpCutoff + ' Hz';
+  document.getElementById('filt-hp-val').textContent = hpCutoff + ' Hz';
+  recomputeFilter();
+}
+
+function getFiltered(rb) {
+  let data = rb.toArray();
+  if (hpCoeffs) data = applyFilter(data, hpCoeffs);
+  if (lpCoeffs) data = applyFilter(data, lpCoeffs);
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── State
+// ═══════════════════════════════════════════════════════════════════════════
+let ws = null;
+const nodeData = {};
+let nodeColorIdx = 0;
+let isRecording = false, recStartTime = null, recTimerInterval = null, recRowCount = 0;
+let lastFrameTime = 0;
+let pktCount = 0, pktPerSec = 0;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Toast system
+// ═══════════════════════════════════════════════════════════════════════════
+function showToast(text, sub, color) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<div class="toast-dot" style="background:${color || 'var(--blue)'}"></div>
+                  <div class="toast-text">${text}${sub ? `<span class="toast-sub">${sub}</span>` : ''}</div>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('fading');
+    setTimeout(() => el.remove(), 320);
+  }, 2800);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── WebSocket
+// ═══════════════════════════════════════════════════════════════════════════
+function connect() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen  = () => { setWsDot(true); showToast('Bridge connected', 'WebSocket link established', 'var(--green)'); refreshPorts(); sendCmd({ cmd: 'get_names' }); };
+  ws.onclose = () => { setWsDot(false); setTimeout(connect, RECONNECT); };
+  ws.onmessage = ({ data }) => {
+    const m = JSON.parse(data);
+    switch (m.type) {
+      case 'imu':            handleImu(m); break;
+      case 'nodes':          handleNodes(m.nodes); break;
+      case 'node_event':     handleNodeEvent(m); break;
+      case 'master_status':  handleMasterStatus(m); break;
+      case 'sync_ack':       onSyncAck(m); break;
+      case 'ports':          handlePorts(m); break;
+      case 'serial_status':  handleSerialStatus(m); break;
+      case 'node_names':     handleNodeNames(m); break;
+      case 'record_started': onRecordStarted(); break;
+      case 'record_stopped': onRecordStopped(m); break;
+    }
+  };
+}
+
+function setWsDot(on) {
+  document.getElementById('ws-dot').className = 'status-dot ' + (on ? 'dot-on' : 'dot-off');
+  document.getElementById('ws-label').textContent = on ? 'Connected' : 'Disconnected';
+}
+
+function sendCmd(cmd) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(cmd));
+}
+
+let syncEpochMs = 0;
+
+// ── Time Sync Overlay state ──
+const syncStats = {};  // node_id → { pktCount, pktPerSec, lastTimestampMs, lastTimestampUs, lastArrival }
+let syncOverlayVisible = false;
+
+function toggleSyncOverlay() {
+  syncOverlayVisible = !syncOverlayVisible;
+  document.getElementById('sync-overlay').classList.toggle('visible', syncOverlayVisible);
+  document.getElementById('sync-overlay-toggle').classList.toggle('active', syncOverlayVisible);
+}
+
+function trackSyncStats(m) {
+  const id = m.node_id;
+  if (!syncStats[id]) syncStats[id] = { pktCount: 0, pktPerSec: 0, lastTimestampMs: 0, lastTimestampUs: 0, lastArrival: 0 };
+  const s = syncStats[id];
+  s.pktCount++;
+  s.lastTimestampMs = m.timestamp_ms || 0;
+  s.lastTimestampUs = m.timestamp_us || 0;
+  s.lastArrival = Date.now();
+}
+
+function syncBadge(deltaMs) {
+  if (deltaMs === null) return '<span class="sync-node-badge badge-nosync">NO SYNC</span>';
+  const abs = Math.abs(deltaMs);
+  if (abs < 5)  return `<span class="sync-node-badge badge-excellent">&lt;5 ms</span>`;
+  if (abs < 10) return `<span class="sync-node-badge badge-good">5-10 ms</span>`;
+  if (abs < 20) return `<span class="sync-node-badge badge-warning">10-20 ms</span>`;
+  return `<span class="sync-node-badge badge-bad">&gt;20 ms</span>`;
+}
+
+function updateSyncOverlay() {
+  if (!syncOverlayVisible) return;
+
+  // Per-node pkt/s snapshot + reset
+  const streamingIds = [];
+  Object.keys(syncStats).forEach(id => {
+    const s = syncStats[id];
+    s.pktPerSec = s.pktCount;
+    s.pktCount = 0;
+    if (s.pktPerSec > 0 || (nodeData[id] && nodeData[id].state === 'streaming')) streamingIds.push(+id);
+  });
+  streamingIds.sort((a, b) => a - b);
+
+  const list = document.getElementById('sync-node-list');
+  if (streamingIds.length === 0) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text-disabled);padding:8px 0;">No streaming nodes</div>';
+    document.getElementById('sync-max-delta').textContent = '--';
+    document.getElementById('sync-max-delta').style.color = '';
+    return;
+  }
+
+  // Build per-node rows
+  let html = '';
+  const latencies = [];  // { id, latencyMs }
+  const tsValues = [];   // { id, tsMs } for inter-node comparison
+
+  streamingIds.forEach(id => {
+    const s = syncStats[id];
+    const nd = nodeData[id];
+    const color = nd ? nd.color : 'var(--text-primary)';
+
+    // Latency: how stale is data? Date.now() - timestamp_ms
+    // timestamp_ms = absolute epoch from master. Delta = pipeline latency.
+    let latencyMs = null;
+    let latencyStr = '--';
+    if (s.lastTimestampMs > 0 && syncEpochMs > 0) {
+      latencyMs = Date.now() - s.lastTimestampMs;
+      latencyStr = latencyMs.toFixed(0) + ' ms';
+      latencies.push({ id, latencyMs });
+    }
+
+    if (s.lastTimestampMs > 0) tsValues.push({ id, tsMs: s.lastTimestampMs, arrival: s.lastArrival });
+
+    const badge = syncBadge(latencyMs !== null ? latencyMs : null);
+    const rate = s.pktPerSec;
+
+    html += `<div class="sync-node-row">
+      <span class="sync-node-id" style="color:${color}">${nodeName(id)}</span>
+      <span class="sync-node-stats">${latencyStr} ${badge}</span>
+      <span class="sync-node-rate">${rate} Hz</span>
+    </div>`;
+  });
+  list.innerHTML = html;
+
+  // Inter-node sync error: max timestamp_ms delta between any two streaming nodes
+  let maxDelta = 0;
+  if (tsValues.length >= 2) {
+    // Compare latest timestamps, adjusted for arrival time differences
+    for (let i = 0; i < tsValues.length; i++) {
+      for (let j = i + 1; j < tsValues.length; j++) {
+        // Adjust: if node A's packet arrived later, its timestamp will naturally be higher
+        // Compensate by subtracting arrival time difference
+        const arrivalDiff = tsValues[i].arrival - tsValues[j].arrival;
+        const tsDiff = tsValues[i].tsMs - tsValues[j].tsMs;
+        const adjusted = Math.abs(tsDiff - arrivalDiff);
+        if (adjusted > maxDelta) maxDelta = adjusted;
+      }
+    }
+  }
+
+  const deltaEl = document.getElementById('sync-max-delta');
+  if (tsValues.length < 2) {
+    deltaEl.textContent = 'Need 2+ nodes';
+    deltaEl.style.color = 'var(--text-disabled)';
+  } else {
+    deltaEl.textContent = maxDelta.toFixed(1) + ' ms';
+    if (maxDelta < 5)       deltaEl.style.color = 'var(--green)';
+    else if (maxDelta < 10) deltaEl.style.color = 'var(--blue)';
+    else if (maxDelta < 20) deltaEl.style.color = 'var(--amber)';
+    else                    deltaEl.style.color = 'var(--red)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Button loading helper
+// ═══════════════════════════════════════════════════════════════════════════
+function btnLoading(btn, text) {
+  if (!btn || btn.dataset.loading) return () => {};
+  const orig = btn.textContent;
+  btn.dataset.loading = '1';
+  btn.textContent = text || 'Loading...';
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  const tid = setTimeout(() => restore(), 6000);  // safety timeout
+  function restore() {
+    clearTimeout(tid);
+    delete btn.dataset.loading;
+    btn.textContent = orig;
+    btn.disabled = false;
+    btn.style.opacity = '';
+  }
+  return restore;
+}
+
+// Per-node loading: track restore callbacks by node_id
+const _nodeRestores = {};
+function btnLoadingNode(id, btn, text) {
+  if (_nodeRestores[id]) _nodeRestores[id]();  // cancel previous
+  _nodeRestores[id] = btnLoading(btn, text);
+}
+function btnRestoreNode(id) {
+  if (_nodeRestores[id]) { _nodeRestores[id](); delete _nodeRestores[id]; }
+}
+
+function sendSync() {
+  const btn = document.getElementById('sync-btn-header');
+  const restore = btnLoading(btn, 'Syncing...');
+  sendCmd({ cmd: 'sync_manual' });
+  // restore happens on sync_ack
+  window._syncRestore = restore;
+}
+
+function onSyncAck(m) {
+  syncEpochMs = m.epoch_ms;
+  updateSyncChip(true, 0);
+  showToast('Synced', `Epoch ${m.epoch_ms}`, 'var(--green)');
+  if (window._syncRestore) { window._syncRestore(); window._syncRestore = null; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Port Selector
+// ═══════════════════════════════════════════════════════════════════════════
+let portConnected = false;
+let connectedPort = null;
+
+function refreshPorts() {
+  sendCmd({ cmd: 'list_ports' });
+}
+
+function handlePorts(m) {
+  const sel = document.getElementById('port-select');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Select port...</option>';
+  (m.ports || []).forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.port;
+    // Show short name + description
+    const short = p.port.replace('/dev/', '');
+    opt.textContent = p.desc && p.desc !== 'n/a' ? `${short} — ${p.desc}` : short;
+    sel.appendChild(opt);
+  });
+  // Restore selection
+  if (m.connected) {
+    sel.value = m.connected;
+    setPortConnected(true, m.connected);
+  } else if (prev) {
+    sel.value = prev;
+  }
+}
+
+function handleSerialStatus(m) {
+  setPortConnected(m.connected, m.port);
+  if (m.connected) {
+    showToast('Serial connected', m.port.replace('/dev/', ''), 'var(--green)');
+  } else {
+    showToast('Serial disconnected', '', 'var(--text-tertiary)');
+  }
+}
+
+function setPortConnected(connected, port) {
+  portConnected = connected;
+  connectedPort = port;
+  const btn = document.getElementById('port-connect-btn');
+  const sel = document.getElementById('port-select');
+  // Clear loading state first
+  if (window._portRestore) { window._portRestore(); window._portRestore = null; }
+  delete btn.dataset.loading;
+  btn.disabled = false;
+  btn.style.opacity = '';
+  if (connected) {
+    btn.textContent = 'Disconnect';
+    btn.classList.add('connected');
+    sel.value = port || '';
+    sel.disabled = true;
+  } else {
+    btn.textContent = 'Connect';
+    btn.classList.remove('connected');
+    sel.disabled = false;
+  }
+}
+
+function togglePortConnection() {
+  const btn = document.getElementById('port-connect-btn');
+  if (portConnected) {
+    window._portRestore = btnLoading(btn, 'Disconnecting...');
+    sendCmd({ cmd: 'serial_disconnect' });
+  } else {
+    const port = document.getElementById('port-select').value;
+    if (!port) { showToast('No port selected', 'Choose a port first', 'var(--amber)'); return; }
+    window._portRestore = btnLoading(btn, 'Connecting...');
+    sendCmd({ cmd: 'serial_connect', port });
+  }
+}
+
+function updateSyncChip(synced, ageSec) {
+  const dot = document.getElementById('chip-sync-dot');
+  const lbl = document.getElementById('chip-sync-label');
+  if (!synced || ageSec < 0) {
+    dot.className = 'chip-dot dot-off';
+    lbl.textContent = 'Not synced';
+    lbl.style.color = '';
+  } else {
+    dot.className = 'chip-dot dot-on';
+    dot.style.background = ageSec < 300 ? 'var(--green)' : 'var(--amber)';
+    const d = new Date(syncEpochMs);
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    const ss = String(d.getSeconds()).padStart(2,'0');
+    lbl.textContent = `Synced ${hh}:${mm}:${ss}`;
+    lbl.style.color = ageSec < 300 ? 'var(--green)' : 'var(--amber)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Master Status
+// ═══════════════════════════════════════════════════════════════════════════
+function handleMasterStatus(m) {
+  const ok = m.serial_connected;
+  document.getElementById('serial-status').textContent = `Serial: ${m.serial_port || '--'}${ok ? '' : ' (lost)'}`;
+  document.getElementById('espnow-status').textContent = `ESP-NOW Ch: ${m.espnow_channel}`;
+  document.getElementById('chip-serial-dot').className = 'chip-dot ' + (ok ? 'dot-on' : 'dot-off');
+  document.getElementById('chip-serial-label').textContent = m.serial_port ? m.serial_port.replace('/dev/', '') : '--';
+  document.getElementById('chip-espnow').querySelector('span').textContent = `ESP-NOW Ch ${m.espnow_channel}`;
+  // Keep port selector in sync
+  setPortConnected(ok, m.serial_port || null);
+  // Update sync chip from bridge-reported sync state
+  if (m.synced !== undefined) updateSyncChip(m.synced, m.sync_age_s);
+  updateHeaderCounts();
+}
+
+function updateHeaderCounts() {
+  const ids = Object.keys(nodeData);
+  const conn = ids.filter(id => nodeData[id].state !== 'idle').length;
+  const strm = ids.filter(id => nodeData[id].state === 'streaming').length;
+  document.getElementById('chip-nodes-label').textContent =
+    `${ids.length} node${ids.length !== 1 ? 's' : ''} · ${conn} connected · ${strm} streaming`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Node helpers
+// ═══════════════════════════════════════════════════════════════════════════
+function ensureNode(id, initState) {
+  if (!nodeData[id]) {
+    nodeData[id] = {
+      active: false, lastSeen: Date.now(),
+      state: initState || 'idle', mac: '',
+      R: [[1,0,0],[0,1,0],[0,0,1]],
+      color: NODE_COLORS[nodeColorIdx++ % NODE_COLORS.length],
+      dirty: false,
+      calib: 0,
+      history: {
+        ax: new RingBuffer(HIST), ay: new RingBuffer(HIST), az: new RingBuffer(HIST),
+        gx: new RingBuffer(HIST), gy: new RingBuffer(HIST), gz: new RingBuffer(HIST),
+        qi: new RingBuffer(HIST), qj: new RingBuffer(HIST),
+        qk: new RingBuffer(HIST), qr: new RingBuffer(HIST),
+      },
+      dom: null,
+      name: '',
+    };
+    renderSidebarNode(id, true);
+    updateNodeCount();
+    updateHeaderCounts();
+  }
+  return nodeData[id];
+}
+
+function nodeHex(id) { return '0x' + (+id).toString(16).toUpperCase().padStart(2, '0'); }
+function shortMac(mac) {
+  if (!mac) return '';
+  const p = mac.split(':');
+  return p.length >= 3 ? '...' + p.slice(-3).join(':') : mac;
+}
+
+// ── Node naming ──
+const savedNodeNames = {};  // mac → name (from bridge)
+
+function handleNodeNames(m) {
+  Object.assign(savedNodeNames, m.names || {});
+  // Apply names to existing nodes
+  Object.keys(nodeData).forEach(id => {
+    const nd = nodeData[id];
+    if (nd.mac && savedNodeNames[nd.mac]) {
+      nd.name = savedNodeNames[nd.mac];
+      refreshNodeDisplay(+id);
+    }
+  });
+}
+
+function nodeName(id) {
+  const nd = nodeData[id];
+  return (nd && nd.name) ? nd.name : nodeHex(id);
+}
+
+function refreshNodeDisplay(id) {
+  const nd = nodeData[id];
+  if (!nd) return;
+  // Sidebar name
+  const nn = document.getElementById('nn-' + id);
+  if (nn && !nn.querySelector('input')) {
+    nn.innerHTML = nd.name
+      ? `${nd.name}<span class="node-name-hex">${nodeHex(id)}</span>`
+      : nodeHex(id);
+  }
+  // IMU row label
+  if (nd.dom) {
+    const label = nd.dom.row.querySelector('.imu-row-label');
+    if (label) label.textContent = nd.name || nodeHex(id);
+  }
+}
+
+function startNameEdit(id) {
+  const nd = nodeData[id];
+  if (!nd) return;
+  const nn = document.getElementById('nn-' + id);
+  if (!nn || nn.querySelector('input')) return;
+  const current = nd.name || '';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'node-name-edit';
+  input.value = current;
+  input.placeholder = nodeHex(id);
+  nn.innerHTML = '';
+  nn.appendChild(input);
+  input.focus();
+  input.select();
+
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    const val = input.value.trim();
+    nd.name = val;
+    if (nd.mac) {
+      sendCmd({ cmd: 'set_name', mac: nd.mac, name: val });
+    }
+    // Remove input first, then refresh display
+    input.remove();
+    refreshNodeDisplay(id);
+  };
+  input.addEventListener('blur', finish);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.value = current; input.blur(); }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Data handlers
+// ═══════════════════════════════════════════════════════════════════════════
+function handleImu(m) {
+  pktCount++;
+  trackSyncStats(m);
+  const nd = ensureNode(m.node_id, 'streaming');
+  nd.lastSeen = Date.now();
+  if (nd.state !== 'streaming') {
+    nd.state = 'streaming'; nd.active = true;
+    renderSidebarNode(m.node_id); updateNodeCount(); updateHeaderCounts();
+  }
+  nd.calib = m.calib || 0;
+  nd.timestampMs = m.timestamp_ms || 0;
+  const h = nd.history;
+  h.ax.push(m.ax); h.ay.push(m.ay); h.az.push(m.az);
+  h.gx.push(m.gx); h.gy.push(m.gy); h.gz.push(m.gz);
+  h.qi.push(m.qi); h.qj.push(m.qj); h.qk.push(m.qk); h.qr.push(m.qr);
+
+  const { qi, qj, qk, qr } = m;
+  const mag = Math.sqrt(qi*qi + qj*qj + qk*qk + qr*qr);
+  if (mag > 0.01) nd.R = quatToMatrix(qi/mag, qj/mag, qk/mag, qr/mag);
+
+  nd.dirty = true;
+  ensureImuRow(m.node_id);
+}
+
+function handleNodeEvent(m) {
+  const existed = !!nodeData[m.node_id];
+  const nd = ensureNode(m.node_id, m.state);
+  const changed = nd.state !== m.state;
+  const oldState = nd.state;
+  nd.state = m.state; nd.active = (m.state === 'streaming');
+  nd.lastSeen = Date.now();
+  if (m.mac) {
+    nd.mac = m.mac;
+    if (savedNodeNames[m.mac]) nd.name = savedNodeNames[m.mac];
+  }
+  btnRestoreNode(m.node_id);
+  renderSidebarNode(m.node_id, !document.getElementById('nc-' + m.node_id));
+
+  if (!existed) {
+    showToast(`Node ${nodeName(m.node_id)} discovered`, shortMac(m.mac) || 'New sensor found', 'var(--blue)');
+  } else if (changed && m.state === 'streaming') {
+    showToast(`Node ${nodeName(m.node_id)} streaming`, '', 'var(--green)');
+  } else if (changed && m.state === 'idle' && oldState !== 'idle') {
+    showToast(`Node ${nodeName(m.node_id)} disconnected`, 'Returned to idle state', 'var(--red)');
+  }
+
+  if (changed) { updateNodeCount(); updateHeaderCounts(); if (m.state === 'idle') removeImuRow(m.node_id); }
+}
+
+function handleNodes(list) {
+  list.forEach(n => {
+    const nd = ensureNode(n.id, n.state || 'idle');
+    const ns = n.state || (n.active ? 'streaming' : nd.state);
+    const ch = nd.state !== ns;
+    nd.active = n.active; nd.lastSeen = Date.now() - n.last_seen * 1000;
+    if (n.state) nd.state = n.state;
+    if (n.mac) {
+      nd.mac = n.mac;
+      if (n.name) nd.name = n.name;
+      else if (savedNodeNames[n.mac]) nd.name = savedNodeNames[n.mac];
+    }
+    if (ch) { renderSidebarNode(n.id); updateNodeCount(); updateHeaderCounts(); }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Sidebar Node Cards
+// ═══════════════════════════════════════════════════════════════════════════
+function renderSidebarNode(id, isNew) {
+  const nd = nodeData[id], state = nd.state || 'idle';
+  const listId = state === 'idle' ? 'list-discovered' : 'list-active';
+  let card = document.getElementById('nc-' + id);
+
+  if (isNew || !card) {
+    if (!card) {
+      card = document.createElement('div');
+      card.id = 'nc-' + id;
+      card.innerHTML = `
+        <div class="node-top">
+          <div class="node-indicator" id="ni-${id}"></div>
+          <span class="node-name" id="nn-${id}" ondblclick="event.stopPropagation();startNameEdit(${id})">${nodeHex(id)}</span>
+          <span class="node-ago" id="nt-${id}">0.0s</span>
+        </div>
+        <div class="node-meta">
+          <span class="node-state-pill" id="nb-${id}"></span>
+          <span id="nm-${id}"></span>
+          <div class="calib-bars" id="ncalib-${id}">
+            <div class="calib-bar" id="ncb1-${id}"></div>
+            <div class="calib-bar" id="ncb2-${id}"></div>
+            <div class="calib-bar" id="ncb3-${id}"></div>
+          </div>
+        </div>
+        <div class="node-btns" id="nbtns-${id}"></div>`;
+    }
+    const list = document.getElementById(listId);
+    const cards = [...list.querySelectorAll('.node-card')];
+    const after = cards.find(c => +c.id.split('-')[1] > id);
+    if (after) list.insertBefore(card, after); else list.appendChild(card);
+  } else {
+    const cur = card.parentElement, nxt = document.getElementById(listId);
+    if (cur !== nxt) nxt.appendChild(card);
+  }
+
+  card.className = `node-card state-${state}`;
+  const dot = document.getElementById('ni-' + id);
+  dot.style.background = state === 'streaming' ? 'var(--green)' : state === 'connected' ? 'var(--amber)' : 'var(--text-disabled)';
+  dot.className = 'node-indicator' + (state === 'streaming' ? ' pulse' : '');
+  const nnEl = document.getElementById('nn-' + id);
+  nnEl.style.color = nd.color;
+  if (!nnEl.querySelector('input')) {
+    nnEl.innerHTML = nd.name
+      ? `${nd.name}<span class="node-name-hex">${nodeHex(id)}</span>`
+      : nodeHex(id);
+  }
+
+  const pill = document.getElementById('nb-' + id);
+  pill.className = `node-state-pill pill-${state}`;
+  pill.textContent = state.toUpperCase();
+  document.getElementById('nm-' + id).textContent = shortMac(nd.mac);
+  document.getElementById('nbtns-' + id).innerHTML = nodeButtons(id, state);
+
+  // Calib bars (0-3 bars lit based on nd.calib)
+  const calib = Math.min(3, Math.max(0, nd.calib || 0));
+  for (let i = 1; i <= 3; i++) {
+    const bar = document.getElementById(`ncb${i}-${id}`);
+    if (!bar) continue;
+    if (i <= calib) {
+      bar.className = 'calib-bar ' + (calib === 1 ? 'lit-low' : calib === 2 ? 'lit-mid' : 'lit-high');
+    } else {
+      bar.className = 'calib-bar';
+    }
+  }
+}
+
+function nodeButtonClick(btn, id, cmd, text) {
+  event.stopPropagation();
+  btnLoadingNode(id, btn, text);
+  sendCmd(cmd);
+}
+
+function nodeButtons(id, state) {
+  if (state === 'idle') {
+    return `<button class="primary full sm" onclick="nodeButtonClick(this,${id},{cmd:'connect',node_id:${id}},'Connecting...')">Connect</button>`;
+  }
+  if (state === 'connected') {
+    return `<button class="success sm" onclick="nodeButtonClick(this,${id},{cmd:'start',node_id:${id}},'Starting...')">Start</button>
+            <button class="sm" onclick="event.stopPropagation();sendCmd({cmd:'calib',node_id:${id}})">Calib</button>
+            <button class="danger sm" onclick="nodeButtonClick(this,${id},{cmd:'disconnect',node_id:${id}},'Disconnecting...')">Disc</button>`;
+  }
+  return `<button class="danger sm" onclick="nodeButtonClick(this,${id},{cmd:'stop',node_id:${id}},'Stopping...')">Stop</button>
+          <button class="sm" onclick="event.stopPropagation();sendCmd({cmd:'calib',node_id:${id}})">Calib</button>
+          <button class="warning sm" onclick="nodeButtonClick(this,${id},{cmd:'disconnect',node_id:${id}},'Disconnecting...')">Disc</button>`;
+}
+
+function updateNodeCount() {
+  const all = Object.keys(nodeData);
+  const disc = all.filter(id => nodeData[id].state === 'idle');
+  const act  = all.filter(id => nodeData[id].state !== 'idle');
+  document.getElementById('node-count').textContent = all.length;
+  document.getElementById('cnt-disc').textContent = disc.length;
+  document.getElementById('cnt-active').textContent = act.length;
+  document.getElementById('scan-row').style.display = all.length === 0 ? 'flex' : 'none';
+  document.getElementById('sect-discovered').style.display = disc.length > 0 ? 'block' : 'none';
+  document.getElementById('sect-active').style.display = act.length > 0 ? 'block' : 'none';
+  // Restore "All" button loading states when sections change
+  const ca = document.getElementById('btn-connect-all');
+  if (ca && ca.dataset.loading && disc.length === 0) { delete ca.dataset.loading; ca.textContent = 'Connect All'; ca.disabled = false; ca.style.opacity = ''; }
+  const sa = document.getElementById('btn-start-all');
+  if (sa && sa.dataset.loading) { delete sa.dataset.loading; sa.textContent = 'Start All'; sa.disabled = false; sa.style.opacity = ''; }
+  const xa = document.getElementById('btn-stop-all');
+  if (xa && xa.dataset.loading) { delete xa.dataset.loading; xa.textContent = 'Stop All'; xa.disabled = false; xa.style.opacity = ''; }
+  const da = document.getElementById('btn-disc-all');
+  if (da && da.dataset.loading && act.length === 0) { delete da.dataset.loading; da.textContent = 'Disc All'; da.disabled = false; da.style.opacity = ''; }
+}
+
+function refreshDevices() {
+  // Remove all nodes from UI, let fresh beacons/events repopulate
+  Object.keys(nodeData).forEach(id => {
+    removeImuRow(+id);
+    const card = document.getElementById('nc-' + id);
+    if (card) card.remove();
+    delete syncStats[id];
+  });
+  Object.keys(nodeData).forEach(id => delete nodeData[id]);
+  updateNodeCount();
+  updateHeaderCounts();
+  showToast('Devices cleared', 'Waiting for fresh beacons...', 'var(--blue)');
+}
+
+function connectAll() {
+  btnLoading(document.getElementById('btn-connect-all'), 'Connecting...');
+  Object.keys(nodeData).forEach(id => { if (nodeData[id].state === 'idle') sendCmd({ cmd: 'connect', node_id: +id }); });
+}
+function startAll() {
+  btnLoading(document.getElementById('btn-start-all'), 'Starting...');
+  sendCmd({ cmd: 'start', node_id: 255 });
+}
+function stopAll() {
+  btnLoading(document.getElementById('btn-stop-all'), 'Stopping...');
+  sendCmd({ cmd: 'stop', node_id: 255 });
+}
+function disconnectAll() {
+  btnLoading(document.getElementById('btn-disc-all'), 'Disconnecting...');
+  Object.keys(nodeData).forEach(id => { if (nodeData[id].state !== 'idle') sendCmd({ cmd: 'disconnect', node_id: +id }); });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── IMU Grid
+// ═══════════════════════════════════════════════════════════════════════════
+function ensureImuRow(nodeId) {
+  const nd = nodeData[nodeId];
+  if (nd.dom) return;
+  document.getElementById('imu-empty').style.display = 'none';
+
+  const row = document.createElement('div');
+  row.className = 'imu-row'; row.id = 'imu-row-' + nodeId;
+  row.style.setProperty('--node-color', nd.color);
+
+  const label = document.createElement('div');
+  label.className = 'imu-row-label';
+  label.style.color = nd.color;
+  label.textContent = nodeName(nodeId);
+
+  // 3D board + euler
+  const cubeWrap = document.createElement('div');
+  cubeWrap.className = 'imu-cube-wrap';
+
+  const cubeCanvas = document.createElement('canvas');
+  cubeCanvas.width = 120; cubeCanvas.height = 120;
+
+  const cubeInfo = document.createElement('div');
+  cubeInfo.className = 'imu-cube-info';
+  cubeInfo.id = 'qinfo-' + nodeId;
+  cubeInfo.textContent = 'q=(0.00,0.00,0.00,1.00)';
+
+  const eulerDiv = document.createElement('div');
+  eulerDiv.className = 'cube-euler';
+  eulerDiv.innerHTML = `
+    <div class="euler-item">
+      <span class="euler-axis euler-x">R</span>
+      <span class="euler-num" id="er-${nodeId}">0.0°</span>
+      <span class="euler-label">roll</span>
+    </div>
+    <div class="euler-item">
+      <span class="euler-axis euler-y">P</span>
+      <span class="euler-num" id="ep-${nodeId}">0.0°</span>
+      <span class="euler-label">pitch</span>
+    </div>
+    <div class="euler-item">
+      <span class="euler-axis euler-z">Y</span>
+      <span class="euler-num" id="ey-${nodeId}">0.0°</span>
+      <span class="euler-label">yaw</span>
+    </div>`;
+
+  const timeInfo = document.createElement('div');
+  timeInfo.className = 'imu-cube-info';
+  timeInfo.id = 'tinfo-' + nodeId;
+  timeInfo.textContent = 't = 0.000 s';
+
+  cubeWrap.appendChild(cubeCanvas);
+  cubeWrap.appendChild(cubeInfo);
+  cubeWrap.appendChild(timeInfo);
+  cubeWrap.appendChild(eulerDiv);
+
+  // Plots container
+  const plotsDiv = document.createElement('div');
+  plotsDiv.className = 'imu-plots';
+
+  // Accel plot
+  const accelWrap = document.createElement('div');
+  accelWrap.className = 'imu-plot-wrap';
+  const accelHeader = document.createElement('div');
+  accelHeader.className = 'imu-plot-header';
+  const accelTitle = document.createElement('div');
+  accelTitle.className = 'imu-plot-title';
+  accelTitle.textContent = 'Acceleration (m/s²)';
+  const accelVals = document.createElement('div');
+  accelVals.className = 'plot-live-vals';
+  accelVals.innerHTML = `<span style="color:#f04452" id="av-x-${nodeId}">ax 0.00</span>
+                          <span style="color:#03b26c" id="av-y-${nodeId}">ay 0.00</span>
+                          <span style="color:#3182f6" id="av-z-${nodeId}">az 0.00</span>`;
+  accelHeader.appendChild(accelTitle);
+  accelHeader.appendChild(accelVals);
+  const accelCanvas = document.createElement('canvas');
+  accelWrap.appendChild(accelHeader);
+  accelWrap.appendChild(accelCanvas);
+
+  // Gyro plot
+  const gyroWrap = document.createElement('div');
+  gyroWrap.className = 'imu-plot-wrap';
+  const gyroHeader = document.createElement('div');
+  gyroHeader.className = 'imu-plot-header';
+  const gyroTitle = document.createElement('div');
+  gyroTitle.className = 'imu-plot-title';
+  gyroTitle.textContent = 'Gyroscope (rad/s)';
+  const gyroVals = document.createElement('div');
+  gyroVals.className = 'plot-live-vals';
+  gyroVals.innerHTML = `<span style="color:#f04452" id="gv-x-${nodeId}">gx 0.00</span>
+                         <span style="color:#03b26c" id="gv-y-${nodeId}">gy 0.00</span>
+                         <span style="color:#3182f6" id="gv-z-${nodeId}">gz 0.00</span>`;
+  gyroHeader.appendChild(gyroTitle);
+  gyroHeader.appendChild(gyroVals);
+  const gyroCanvas = document.createElement('canvas');
+  gyroWrap.appendChild(gyroHeader);
+  gyroWrap.appendChild(gyroCanvas);
+
+  plotsDiv.appendChild(accelWrap);
+  plotsDiv.appendChild(gyroWrap);
+
+  row.appendChild(label);
+  row.appendChild(cubeWrap);
+  row.appendChild(plotsDiv);
+
+  const grid = document.getElementById('imu-grid');
+  const rows = [...grid.querySelectorAll('.imu-row')];
+  const after = rows.find(r => +r.id.split('-')[2] > nodeId);
+  if (after) grid.insertBefore(row, after); else grid.appendChild(row);
+
+  nd.dom = {
+    row, cubeCanvas, cubeCtx: cubeCanvas.getContext('2d'), cubeInfo,
+    accelCanvas, accelCtx: null,
+    gyroCanvas,  gyroCtx: null,
+  };
+  requestAnimationFrame(() => syncRowCanvases(nodeId));
+}
+
+function removeImuRow(nodeId) {
+  const nd = nodeData[nodeId];
+  if (nd && nd.dom) { nd.dom.row.remove(); nd.dom = null; }
+  if (!document.getElementById('imu-grid').querySelector('.imu-row'))
+    document.getElementById('imu-empty').style.display = 'flex';
+}
+
+function syncRowCanvases(nodeId) {
+  const nd = nodeData[nodeId]; if (!nd || !nd.dom) return;
+  const d = nd.dom;
+  syncSize(d.accelCanvas); syncSize(d.gyroCanvas);
+  d.accelCtx = d.accelCanvas.getContext('2d');
+  d.gyroCtx  = d.gyroCanvas.getContext('2d');
+  nd.dirty = true;
+}
+
+function syncSize(c) {
+  const w = c.offsetWidth || 1, h = c.offsetHeight || 1;
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Sample Rate
+// ═══════════════════════════════════════════════════════════════════════════
+function setRate(hz) {
+  sendCmd({ cmd: 'rate', value: hz });
+  currentSampleRate = hz;
+  const maxF = Math.floor(hz * 0.45);
+  document.getElementById('filt-lp-slider').max = maxF;
+  document.getElementById('filt-hp-slider').max = maxF;
+  recomputeFilter();
+  document.querySelectorAll('.rate-btns button').forEach(b => {
+    b.className = b.textContent.trim().startsWith(String(hz)) ? 'primary' : '';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Recording
+// ═══════════════════════════════════════════════════════════════════════════
+function toggleRecording() {
+  if (isRecording) {
+    const fn = document.getElementById('rec-name').value.trim();
+    const cmd = { cmd: 'record_stop' };
+    if (fn) cmd.filename = fn;
+    sendCmd(cmd);
+    return;
+  }
+  // Always sync clocks before recording
+  sendSync();
+  sendCmd({ cmd: 'record_start' });
+}
+
+function onRecordStarted() {
+  isRecording = true; recStartTime = Date.now(); recRowCount = 0;
+  const btn = document.getElementById('rec-btn');
+  btn.textContent = '⏹ Stop Recording';
+  btn.classList.remove('primary'); btn.classList.add('recording');
+  document.getElementById('rec-status').style.display = 'flex';
+  document.getElementById('rec-rows').textContent = '0 rows';
+  // Show header recording chip
+  document.getElementById('chip-rec').style.display = '';
+  recTimerInterval = setInterval(() => {
+    const s = Math.floor((Date.now() - recStartTime) / 1000);
+    const timeStr = `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+    document.getElementById('rec-timer').textContent = timeStr;
+    document.getElementById('chip-rec-label').textContent = `REC ${timeStr}`;
+    recRowCount += pktPerSec;
+    document.getElementById('rec-rows').textContent = `~${recRowCount.toLocaleString()} rows`;
+  }, 1000);
+  showToast('Recording started', 'Clocks synced · buffering IMU data', 'var(--red)');
+}
+
+function onRecordStopped(msg) {
+  isRecording = false; clearInterval(recTimerInterval);
+  const btn = document.getElementById('rec-btn');
+  btn.textContent = 'Start Recording';
+  btn.classList.add('primary'); btn.classList.remove('recording');
+  document.getElementById('rec-status').style.display = 'none';
+  // Hide header recording chip
+  document.getElementById('chip-rec').style.display = 'none';
+  document.getElementById('chip-rec-label').textContent = 'REC 0:00';
+
+  if (msg.csv) {
+    const blob = new Blob([msg.csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = msg.file || 'recording.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`Saved ${msg.file || 'recording.csv'}`, `${(msg.rows || 0).toLocaleString()} rows downloaded`, 'var(--green)');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Quaternion → Rotation Matrix
+// ═══════════════════════════════════════════════════════════════════════════
+function quatToMatrix(qi, qj, qk, qr) {
+  const [w, x, y, z] = [qr, qi, qj, qk];
+  return [
+    [1-2*(y*y+z*z),  2*(x*y-w*z),   2*(x*z+w*y)],
+    [2*(x*y+w*z),    1-2*(x*x+z*z), 2*(y*z-w*x)],
+    [2*(x*z-w*y),    2*(y*z+w*x),   1-2*(x*x+y*y)],
+  ];
+}
+
+// ── Quaternion → Euler (degrees)
+function quatToEuler(qi, qj, qk, qr) {
+  const w=qr, x=qi, y=qj, z=qk;
+  const roll  = Math.atan2(2*(w*x+y*z), 1-2*(x*x+y*y)) * 180/Math.PI;
+  const sinp  = Math.max(-1, Math.min(1, 2*(w*y-z*x)));
+  const pitch = Math.asin(sinp) * 180/Math.PI;
+  const yaw   = Math.atan2(2*(w*z+x*y), 1-2*(y*y+z*z)) * 180/Math.PI;
+  return { roll, pitch, yaw };
+}
+
+function mv(R, v) {
+  return [
+    R[0][0]*v[0] + R[0][1]*v[1] + R[0][2]*v[2],
+    R[1][0]*v[0] + R[1][1]*v[1] + R[1][2]*v[2],
+    R[2][0]*v[0] + R[2][1]*v[1] + R[2][2]*v[2],
+  ];
+}
+
+function proj(v, cx, cy, sc, fov) {
+  const d = fov / (fov + v[2]);
+  return [cx + v[0]*d*sc, cy - v[1]*d*sc];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── 3D PCB Board Drawing
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Board vertices: flat rectangle, thin on Z axis (PCB shape)
+const BRD_V = [
+  [-1.2,-0.8,-0.08],[1.2,-0.8,-0.08],[1.2,0.8,-0.08],[-1.2,0.8,-0.08],  // bottom
+  [-1.2,-0.8, 0.08],[1.2,-0.8, 0.08],[1.2,0.8, 0.08],[-1.2,0.8, 0.08],  // top
+];
+
+// Face: [vertex indices, fill color]
+// Top face = PCB green, bottom = dark substrate, edges = PCB green (darker)
+const BRD_FACES = [
+  [[0,1,2,3], 'rgba(18,20,26,0.97)'],         // bottom — dark substrate
+  [[4,5,6,7], 'rgba(12,52,28,0.97)'],          // top — PCB green
+  [[0,1,5,4], 'rgba(10,44,24,0.90)'],          // front edge
+  [[3,2,6,7], 'rgba(10,44,24,0.90)'],          // back edge
+  [[0,3,7,4], 'rgba(8,38,20,0.90)'],           // left edge
+  [[1,2,6,5], 'rgba(8,38,20,0.90)'],           // right edge
+];
+
+const BRD_EDGES = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+
+// Axis arrows: tip, color, label (RGB matching Toss signal colors)
+const AXES = [
+  { tip: [1.8, 0, 0],  color: '#f04452', label: 'X' },
+  { tip: [0, 1.4, 0],  color: '#03b26c', label: 'Y' },
+  { tip: [0, 0, 1.4],  color: '#3182f6', label: 'Z' },
+];
+const AXIS_ORIGIN = [0, 0, 0.08];
+
+function drawArrow(ctx, p0, p1, color, sc, cx, cy, fov) {
+  const s0 = proj(p0, cx, cy, sc, fov);
+  const s1 = proj(p1, cx, cy, sc, fov);
+  const dx = s1[0]-s0[0], dy = s1[1]-s0[1];
+  const len = Math.sqrt(dx*dx + dy*dy);
+  if (len < 2) return;
+
+  ctx.shadowBlur  = 6;
+  ctx.shadowColor = color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth   = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(s0[0], s0[1]);
+  ctx.lineTo(s1[0], s1[1]);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  const ax = dx/len, ay = dy/len;
+  const hs = 8;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(s1[0], s1[1]);
+  ctx.lineTo(s1[0] - hs*ax + hs*0.4*ay, s1[1] - hs*ay - hs*0.4*ax);
+  ctx.lineTo(s1[0] - hs*ax - hs*0.4*ay, s1[1] - hs*ay + hs*0.4*ax);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawCube(ctx, R) {
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const cx = W/2, cy = H/2 + 4, sc = W*0.22, fov = 4.5;
+  ctx.clearRect(0, 0, W, H);
+
+  // Transform and project board vertices
+  const v3 = BRD_V.map(v => mv(R, v));
+  const pr = v3.map(v => proj(v, cx, cy, sc, fov));
+
+  // Painter's algorithm: sort faces by average Z
+  const faces = BRD_FACES.map(([idx, col]) => ({
+    idx, col, z: idx.reduce((s, i) => s + v3[i][2], 0) / idx.length,
+  })).sort((a, b) => a.z - b.z);
+
+  for (const { idx, col } of faces) {
+    ctx.beginPath();
+    ctx.moveTo(pr[idx[0]][0], pr[idx[0]][1]);
+    for (let i = 1; i < idx.length; i++) ctx.lineTo(pr[idx[i]][0], pr[idx[i]][1]);
+    ctx.closePath();
+    ctx.fillStyle = col;
+    ctx.fill();
+  }
+
+  // PCB edge highlight (subtle gold/cream trace line on top face perimeter)
+  ctx.strokeStyle = 'rgba(180,160,80,0.18)';
+  ctx.lineWidth = 0.8;
+  const topIdx = [4,5,6,7];
+  ctx.beginPath();
+  ctx.moveTo(pr[topIdx[0]][0], pr[topIdx[0]][1]);
+  for (let i = 1; i < topIdx.length; i++) ctx.lineTo(pr[topIdx[i]][0], pr[topIdx[i]][1]);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Board wireframe edges
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 0.6;
+  for (const [a, b] of BRD_EDGES) {
+    ctx.beginPath(); ctx.moveTo(pr[a][0], pr[a][1]); ctx.lineTo(pr[b][0], pr[b][1]); ctx.stroke();
+  }
+
+  // IMU chip body on top surface (square IC package)
+  const chipCorners = [[-0.32,-0.22,0.08],[0.32,-0.22,0.08],[0.32,0.22,0.08],[-0.32,0.22,0.08]];
+  const chipPr = chipCorners.map(v => proj(mv(R, v), cx, cy, sc, fov));
+  ctx.fillStyle = 'rgba(44,44,56,0.95)';
+  ctx.beginPath();
+  ctx.moveTo(chipPr[0][0], chipPr[0][1]);
+  for (let i = 1; i < 4; i++) ctx.lineTo(chipPr[i][0], chipPr[i][1]);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+
+  // Chip dot (pin 1 marker)
+  const dot1 = proj(mv(R, [-0.24,-0.15,0.09]), cx, cy, sc, fov);
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.beginPath(); ctx.arc(dot1[0], dot1[1], 1.2, 0, Math.PI*2); ctx.fill();
+
+  // USB notch on front edge (cosmetic)
+  const usbL = proj(mv(R, [-0.18,-0.8,0]), cx, cy, sc, fov);
+  const usbR = proj(mv(R, [ 0.18,-0.8,0]), cx, cy, sc, fov);
+  ctx.strokeStyle = 'rgba(180,200,255,0.18)';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(usbL[0], usbL[1]); ctx.lineTo(usbR[0], usbR[1]); ctx.stroke();
+
+  // Draw axis arrows (sorted back-to-front)
+  const origin3 = mv(R, AXIS_ORIGIN);
+  const axesSorted = AXES.map(a => {
+    const tip3 = mv(R, [AXIS_ORIGIN[0]+a.tip[0], AXIS_ORIGIN[1]+a.tip[1], AXIS_ORIGIN[2]+a.tip[2]]);
+    return { ...a, origin3, tip3, z: tip3[2] };
+  }).sort((a, b) => a.z - b.z);
+
+  for (const a of axesSorted) {
+    drawArrow(ctx, a.origin3, a.tip3, a.color, sc, cx, cy, fov);
+    const lp = proj(a.tip3, cx, cy, sc, fov);
+    ctx.font = 'bold 10px -apple-system,sans-serif';
+    ctx.fillStyle = a.color;
+    ctx.textAlign = 'center';
+    ctx.fillText(a.label, lp[0]+7, lp[1]-4);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Plot Drawing
+// ═══════════════════════════════════════════════════════════════════════════
+// Minimum Y-axis ranges (auto-scale expands beyond these, never shrinks below)
+const ACCEL_MIN_RANGE = { min: -20, max: 20 };   // m/s²
+const GYRO_MIN_RANGE  = { min: -10, max: 10 };   // rad/s
+
+function drawPlot(ctx, signals, labels, colors, minRange) {
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const P = { l: 38, r: 8, t: 6, b: 12 };
+  const PW = W - P.l - P.r, PH = H - P.t - P.b;
+  ctx.clearRect(0, 0, W, H);
+
+  let ymin = Infinity, ymax = -Infinity;
+  for (const s of signals) for (let i = 0; i < s.length; i++) {
+    if (s[i] < ymin) ymin = s[i];
+    if (s[i] > ymax) ymax = s[i];
+  }
+  if (!isFinite(ymin)) { ymin = -1; ymax = 1; }
+  if (ymin === ymax) { ymin -= 0.5; ymax += 0.5; }
+  const yr = ymax - ymin; ymin -= yr * 0.06; ymax += yr * 0.06;
+  // Enforce minimum scale
+  if (minRange) {
+    if (ymin > minRange.min) ymin = minRange.min;
+    if (ymax < minRange.max) ymax = minRange.max;
+  }
+
+  // Grid lines
+  ctx.lineWidth = 0.5;
+  ctx.font = '600 8px ui-monospace,"Courier New",monospace';
+  ctx.fillStyle = CHART_LABEL;
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const y = P.t + PH * i / 4;
+    const v = ymax - (ymax - ymin) * i / 4;
+    ctx.strokeStyle = CHART_GRID;
+    ctx.beginPath(); ctx.moveTo(P.l, y); ctx.lineTo(P.l + PW, y); ctx.stroke();
+    ctx.fillText(v.toFixed(2), P.l - 3, y + 3);
+  }
+
+  // Zero line
+  if (ymin < 0 && ymax > 0) {
+    const y0 = P.t + PH * (ymax / (ymax - ymin));
+    ctx.strokeStyle = CHART_ZERO;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.moveTo(P.l, y0); ctx.lineTo(P.l + PW, y0); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  const n = signals.reduce((m, s) => Math.max(m, s.length), 0);
+  if (n < 2) return;
+
+  for (let s = 0; s < signals.length; s++) {
+    const sig = signals[s]; if (sig.length < 2) continue;
+    const col = colors[s];
+
+    // Gradient fill under the line (very subtle)
+    const y0fill = P.t + PH * (1 - (0 - ymin) / (ymax - ymin));
+    const y0clamped = Math.max(P.t, Math.min(P.t + PH, y0fill));
+
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    for (let i = 0; i < sig.length; i++) {
+      const x = P.l + PW * i / (HIST - 1);
+      const y = P.t + PH * (1 - (sig[i] - ymin) / (ymax - ymin));
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.lineTo(P.l + PW * (sig.length - 1) / (HIST - 1), y0clamped);
+    ctx.lineTo(P.l, y0clamped);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    // Signal line with subtle glow
+    ctx.shadowBlur  = 3;
+    ctx.shadowColor = col;
+    ctx.strokeStyle = col;
+    ctx.lineWidth   = 1.5;
+    ctx.lineJoin    = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < sig.length; i++) {
+      const x = P.l + PW * i / (HIST - 1);
+      const y = P.t + PH * (1 - (sig[i] - ymin) / (ymax - ymin));
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Legend dot + label
+    const lx = P.l + 4 + s * 36;
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(lx + 3, P.t + 4, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = CHART_LABEL;
+    ctx.textAlign = 'left';
+    ctx.font = '600 8px -apple-system,sans-serif';
+    ctx.fillText(labels[s], lx + 9, P.t + 7);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Render Loop (throttled, max 30fps, max 2 nodes/frame)
+// ═══════════════════════════════════════════════════════════════════════════
+function render(ts) {
+  requestAnimationFrame(render);
+  if (ts - lastFrameTime < FRAME_INTERVAL) return;
+  lastFrameTime = ts;
+
+  const dirty = Object.keys(nodeData).filter(id => nodeData[id].dirty && nodeData[id].dom);
+  if (!dirty.length) return;
+
+  const maxN = Math.ceil(MAX_CANVASES_PER_FRAME / 3);
+  for (const id of dirty.slice(0, maxN)) {
+    const nd = nodeData[id], d = nd.dom;
+    if (!d) continue;
+
+    syncSize(d.accelCanvas); syncSize(d.gyroCanvas);
+    if (!d.accelCtx) d.accelCtx = d.accelCanvas.getContext('2d');
+    if (!d.gyroCtx)  d.gyroCtx  = d.gyroCanvas.getContext('2d');
+
+    drawCube(d.cubeCtx, nd.R);
+
+    // Update quaternion info text
+    const h = nd.history;
+    const qi = h.qi.last(), qj = h.qj.last(), qk = h.qk.last(), qr = h.qr.last();
+    d.cubeInfo.textContent = `q=(${qi.toFixed(2)},${qj.toFixed(2)},${qk.toFixed(2)},${qr.toFixed(2)})`;
+
+    // Update euler angles
+    const { roll, pitch, yaw } = quatToEuler(qi, qj, qk, qr);
+    const er = document.getElementById('er-' + id);
+    const ep = document.getElementById('ep-' + id);
+    const ey = document.getElementById('ey-' + id);
+    if (er) er.textContent = (roll  >= 0 ? '+' : '') + roll.toFixed(1)  + '°';
+    if (ep) ep.textContent = (pitch >= 0 ? '+' : '') + pitch.toFixed(1) + '°';
+    if (ey) ey.textContent = (yaw   >= 0 ? '+' : '') + yaw.toFixed(1)  + '°';
+
+    // Update time display
+    const tEl = document.getElementById('tinfo-' + id);
+    if (tEl && nd.timestampMs > 0) {
+      const sec = (nd.timestampMs - syncEpochMs) / 1000;
+      tEl.textContent = 't = ' + sec.toFixed(3) + ' s';
+    }
+
+    // Update live value readouts
+    const axEl = document.getElementById('av-x-' + id);
+    const ayEl = document.getElementById('av-y-' + id);
+    const azEl = document.getElementById('av-z-' + id);
+    if (axEl) axEl.textContent = 'ax ' + h.ax.last().toFixed(2);
+    if (ayEl) ayEl.textContent = 'ay ' + h.ay.last().toFixed(2);
+    if (azEl) azEl.textContent = 'az ' + h.az.last().toFixed(2);
+    const gxEl = document.getElementById('gv-x-' + id);
+    const gyEl = document.getElementById('gv-y-' + id);
+    const gzEl = document.getElementById('gv-z-' + id);
+    if (gxEl) gxEl.textContent = 'gx ' + h.gx.last().toFixed(2);
+    if (gyEl) gyEl.textContent = 'gy ' + h.gy.last().toFixed(2);
+    if (gzEl) gzEl.textContent = 'gz ' + h.gz.last().toFixed(2);
+
+    drawPlot(d.accelCtx, [getFiltered(h.ax), getFiltered(h.ay), getFiltered(h.az)],
+             ['ax', 'ay', 'az'], PLOT_ACCEL_COLORS, ACCEL_MIN_RANGE);
+    drawPlot(d.gyroCtx,  [getFiltered(h.gx), getFiltered(h.gy), getFiltered(h.gz)],
+             ['gx', 'gy', 'gz'], PLOT_GYRO_COLORS, GYRO_MIN_RANGE);
+
+    nd.dirty = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Keyboard Shortcuts
+// ═══════════════════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  switch (e.key.toUpperCase()) {
+    case 'C': connectAll(); break;
+    case 'S': startAll(); break;
+    case 'X': stopAll(); break;
+    case 'R': toggleRecording(); break;
+    case 'Y': sendSync(); break;
+    case 'T': toggleSyncOverlay(); break;
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Resize handler
+// ═══════════════════════════════════════════════════════════════════════════
+window.addEventListener('resize', () => {
+  Object.keys(nodeData).forEach(id => { if (nodeData[id].dom) syncRowCanvases(+id); });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── 1-second ticker: last-seen timers + pkt/s counter + calib bars
+// ═══════════════════════════════════════════════════════════════════════════
+setInterval(() => {
+  // Last-seen timers
+  Object.keys(nodeData).forEach(id => {
+    const el = document.getElementById('nt-' + id);
+    if (el) el.textContent = ((Date.now() - nodeData[id].lastSeen) / 1000).toFixed(1) + 's';
+    // Refresh calib bars from latest IMU data
+    const nd = nodeData[id];
+    if (nd) {
+      const calib = Math.min(3, Math.max(0, nd.calib || 0));
+      for (let i = 1; i <= 3; i++) {
+        const bar = document.getElementById(`ncb${i}-${id}`);
+        if (!bar) continue;
+        if (i <= calib) {
+          bar.className = 'calib-bar ' + (calib === 1 ? 'lit-low' : calib === 2 ? 'lit-mid' : 'lit-high');
+        } else {
+          bar.className = 'calib-bar';
+        }
+      }
+    }
+  });
+
+  // Packet throughput
+  pktPerSec = pktCount;
+  pktCount = 0;
+  document.getElementById('chip-pps-label').textContent = `${pktPerSec} pkt/s`;
+  document.getElementById('chip-pps-dot').className = 'chip-dot ' + (pktPerSec > 0 ? 'dot-on' : 'dot-off');
+
+  // Time sync overlay update
+  updateSyncOverlay();
+}, 1000);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ── Init
+// ═══════════════════════════════════════════════════════════════════════════
+connect();
+requestAnimationFrame(render);
+</script>
+</body>
+</html>

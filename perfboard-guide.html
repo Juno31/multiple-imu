@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multiple-IMU Perfboard Wiring Guide</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e0e0e8;
+    --dim: #8a8d9a;
+    --accent: #5b8def;
+    --green: #4ade80;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --orange: #fb923c;
+    --purple: #a78bfa;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.15rem; font-weight: 600; margin: 2rem 0 0.75rem; color: var(--accent); }
+  h3 { font-size: 0.95rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
+  .subtitle { color: var(--dim); font-size: 0.85rem; margin-bottom: 2rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
+  }
+  th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 2px solid var(--border);
+    color: var(--dim);
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  tr:last-child td { border-bottom: none; }
+  .qty { font-weight: 600; color: var(--accent); text-align: center; }
+  .note { color: var(--dim); font-size: 0.8rem; font-style: italic; }
+  .warn {
+    background: rgba(251, 191, 36, 0.08);
+    border-left: 3px solid var(--yellow);
+    padding: 0.75rem 1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 0.75rem 0;
+    font-size: 0.85rem;
+  }
+  .info {
+    background: rgba(91, 141, 239, 0.08);
+    border-left: 3px solid var(--accent);
+    padding: 0.75rem 1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 0.75rem 0;
+    font-size: 0.85rem;
+  }
+  .step-list { list-style: none; counter-reset: step; }
+  .step-list li {
+    counter-increment: step;
+    padding: 0.5rem 0 0.5rem 2.5rem;
+    position: relative;
+    font-size: 0.88rem;
+  }
+  .step-list li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 1.6rem;
+    height: 1.6rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .wire { display: inline-block; padding: 1px 6px; border-radius: 3px; font-family: monospace; font-size: 0.82rem; font-weight: 600; }
+  .w-red { background: rgba(248,113,113,0.15); color: var(--red); }
+  .w-black { background: rgba(255,255,255,0.08); color: #ccc; }
+  .w-blue { background: rgba(91,141,239,0.15); color: var(--accent); }
+  .w-yellow { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .w-green { background: rgba(74,222,128,0.15); color: var(--green); }
+  .w-orange { background: rgba(251,146,60,0.15); color: var(--orange); }
+  .w-purple { background: rgba(167,139,250,0.15); color: var(--purple); }
+
+  .schematic-container {
+    background: #13151f;
+    border-radius: 8px;
+    padding: 1.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+  svg text { font-family: 'Inter', monospace; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .badge-master { background: rgba(91,141,239,0.2); color: var(--accent); }
+  .badge-slave { background: rgba(74,222,128,0.2); color: var(--green); }
+  .badge-both { background: rgba(167,139,250,0.2); color: var(--purple); }
+</style>
+</head>
+<body>
+
+<h1>Multiple-IMU — Perfboard Build Guide</h1>
+<p class="subtitle">XIAO ESP32C3 + BNO085 + LiPo &nbsp;|&nbsp; 1 master + 2 slave nodes</p>
+
+<!-- ============================================================ -->
+<h2>1. Bill of Materials</h2>
+
+<div class="card">
+<h3>Per Node (×3 total) <span class="badge badge-both">All Nodes Identical</span></h3>
+<table>
+  <thead><tr><th>Component</th><th>Spec</th><th style="text-align:center">Qty</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Seeed XIAO ESP32C3</td><td>—</td><td class="qty">1</td><td>Has built-in LiPo charger via USB-C</td></tr>
+    <tr><td>Adafruit BNO085 breakout</td><td>I2C, 0x4A</td><td class="qty">1</td><td>Stemma QT / header version</td></tr>
+    <tr><td>LiPo pouch cell</td><td>3.7V, 400–1000mAh</td><td class="qty">1</td><td>JST-PH 2-pin recommended, must have protection circuit</td></tr>
+    <tr><td>SPST slide switch</td><td>~0.3A rated</td><td class="qty">1</td><td>Power on/off (between BAT+ and XIAO)</td></tr>
+    <tr><td>Perfboard</td><td>5×7 cm or 4×6 cm</td><td class="qty">1</td><td>Double-sided preferred for ground plane</td></tr>
+    <tr><td>Female pin headers</td><td>1×7 (×2)</td><td class="qty">2</td><td>Socket for XIAO (removable for reprogramming)</td></tr>
+    <tr><td>Female pin headers</td><td>1×9 or 1×7</td><td class="qty">1</td><td>Socket for BNO085 breakout</td></tr>
+    <tr><td>Hookup wire</td><td>22–26 AWG solid</td><td class="qty">—</td><td>5 connections per board</td></tr>
+    <tr><td>100nF ceramic cap</td><td>0.1µF, ≥10V</td><td class="qty">1</td><td>Decoupling cap near BNO085 VIN</td></tr>
+    <tr><td>JST-PH 2-pin connector</td><td>female, right-angle</td><td class="qty">1</td><td>Optional: soldered to board for battery plug</td></tr>
+  </tbody>
+</table>
+<p class="note">Total for 3 nodes: 3× XIAO, 3× BNO085, 3× LiPo, 3× perfboard, etc.</p>
+</div>
+
+<div class="card">
+<h3>Tools Required</h3>
+<table>
+  <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>Soldering iron (temp-controlled)</td><td>All through-hole joints</td></tr>
+    <tr><td>Solder (60/40 or lead-free)</td><td>—</td></tr>
+    <tr><td>Flush cutters</td><td>Trim leads</td></tr>
+    <tr><td>Multimeter</td><td>Continuity check before powering on</td></tr>
+    <tr><td>Wire stripper</td><td>22–26 AWG</td></tr>
+    <tr><td>Hot glue / double-sided tape</td><td>Secure battery to board</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2>2. Wiring Schematic</h2>
+
+<div class="card">
+<p style="font-size:0.85rem; margin-bottom:1rem;">All 3 nodes use identical wiring. Master vs slave is determined by firmware, not hardware.</p>
+
+<div class="schematic-container">
+<svg viewBox="0 0 740 420" width="740" height="420" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background grid -->
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="1" fill="#1e2030"/>
+    </pattern>
+  </defs>
+  <rect width="740" height="420" fill="#13151f"/>
+  <rect width="740" height="420" fill="url(#grid)"/>
+
+  <!-- XIAO ESP32C3 module -->
+  <rect x="80" y="60" width="180" height="260" rx="6" fill="#1a1d27" stroke="#5b8def" stroke-width="2"/>
+  <text x="170" y="45" text-anchor="middle" fill="#5b8def" font-size="13" font-weight="700">XIAO ESP32C3</text>
+
+  <!-- XIAO pin labels - left side -->
+  <text x="70" y="105" text-anchor="end" fill="#8a8d9a" font-size="10">D0 / GPIO2</text>
+  <circle cx="88" cy="101" r="4" fill="#2a2d3a" stroke="#5b8def" stroke-width="1"/>
+  <text x="70" y="135" text-anchor="end" fill="#8a8d9a" font-size="10">D1 / GPIO3</text>
+  <circle cx="88" cy="131" r="4" fill="#2a2d3a" stroke="#5b8def" stroke-width="1"/>
+  <text x="70" y="165" text-anchor="end" fill="#8a8d9a" font-size="10">D2 / GPIO4</text>
+  <circle cx="88" cy="161" r="4" fill="#2a2d3a" stroke="#5b8def" stroke-width="1"/>
+  <text x="70" y="195" text-anchor="end" fill="#8a8d9a" font-size="10">D3 / GPIO5</text>
+  <circle cx="88" cy="191" r="4" fill="#2a2d3a" stroke="#5b8def" stroke-width="1"/>
+
+  <text x="70" y="225" text-anchor="end" fill="#fbbf24" font-size="10" font-weight="700">D4 / GPIO6 (SDA)</text>
+  <circle cx="88" cy="221" r="5" fill="#fbbf24" stroke="#fbbf24" stroke-width="1"/>
+
+  <text x="70" y="255" text-anchor="end" fill="#fb923c" font-size="10" font-weight="700">D5 / GPIO7 (SCL)</text>
+  <circle cx="88" cy="251" r="5" fill="#fb923c" stroke="#fb923c" stroke-width="1"/>
+
+  <text x="70" y="285" text-anchor="end" fill="#8a8d9a" font-size="10">D6 / GPIO21</text>
+  <circle cx="88" cy="281" r="4" fill="#2a2d3a" stroke="#5b8def" stroke-width="1"/>
+
+  <!-- XIAO pin labels - right side -->
+  <text x="270" y="105" text-anchor="start" fill="#f87171" font-size="10" font-weight="700">5V</text>
+  <circle cx="252" cy="101" r="5" fill="#f87171" stroke="#f87171" stroke-width="1"/>
+  <text x="270" y="135" text-anchor="start" fill="#ccc" font-size="10" font-weight="700">GND</text>
+  <circle cx="252" cy="131" r="5" fill="#555" stroke="#ccc" stroke-width="1"/>
+  <text x="270" y="165" text-anchor="start" fill="#4ade80" font-size="10" font-weight="700">3V3</text>
+  <circle cx="252" cy="161" r="5" fill="#4ade80" stroke="#4ade80" stroke-width="1"/>
+  <text x="270" y="195" text-anchor="start" fill="#8a8d9a" font-size="10">D10 / GPIO10</text>
+  <circle cx="252" cy="191" r="4" fill="#2a2d3a" stroke="#5b8def" stroke-width="1"/>
+  <text x="270" y="225" text-anchor="start" fill="#8a8d9a" font-size="10">D9 / GPIO9</text>
+  <circle cx="252" cy="221" r="4" fill="#2a2d3a" stroke="#5b8def" stroke-width="1"/>
+  <text x="270" y="255" text-anchor="start" fill="#8a8d9a" font-size="10">D8 / GPIO8</text>
+  <circle cx="252" cy="251" r="4" fill="#2a2d3a" stroke="#5b8def" stroke-width="1"/>
+  <text x="270" y="285" text-anchor="start" fill="#8a8d9a" font-size="10">D7 / GPIO20</text>
+  <circle cx="252" cy="281" r="4" fill="#2a2d3a" stroke="#5b8def" stroke-width="1"/>
+
+  <!-- USB-C label -->
+  <rect x="140" y="60" width="60" height="16" rx="3" fill="#2a2d3a" stroke="#5b8def" stroke-width="1"/>
+  <text x="170" y="72" text-anchor="middle" fill="#8a8d9a" font-size="8">USB-C</text>
+
+  <!-- Battery pads (bottom of XIAO) -->
+  <rect x="120" y="300" width="100" height="24" rx="3" fill="#2a2d3a" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="170" y="316" text-anchor="middle" fill="#a78bfa" font-size="9" font-weight="600">BAT+&nbsp;&nbsp;&nbsp;&nbsp;BAT−</text>
+  <text x="170" y="340" text-anchor="middle" fill="#8a8d9a" font-size="8">(bottom pads)</text>
+
+  <!-- BNO085 module -->
+  <rect x="470" y="100" width="170" height="200" rx="6" fill="#1a1d27" stroke="#4ade80" stroke-width="2"/>
+  <text x="555" y="88" text-anchor="middle" fill="#4ade80" font-size="13" font-weight="700">BNO085 Breakout</text>
+
+  <!-- BNO085 pins -->
+  <text x="460" y="145" text-anchor="end" fill="#4ade80" font-size="10" font-weight="700">VIN (3V3)</text>
+  <circle cx="478" cy="141" r="5" fill="#4ade80" stroke="#4ade80" stroke-width="1"/>
+  <text x="460" y="175" text-anchor="end" fill="#ccc" font-size="10" font-weight="700">GND</text>
+  <circle cx="478" cy="171" r="5" fill="#555" stroke="#ccc" stroke-width="1"/>
+  <text x="460" y="205" text-anchor="end" fill="#fbbf24" font-size="10" font-weight="700">SDA</text>
+  <circle cx="478" cy="201" r="5" fill="#fbbf24" stroke="#fbbf24" stroke-width="1"/>
+  <text x="460" y="235" text-anchor="end" fill="#fb923c" font-size="10" font-weight="700">SCL</text>
+  <circle cx="478" cy="231" r="5" fill="#fb923c" stroke="#fb923c" stroke-width="1"/>
+  <text x="460" y="265" text-anchor="end" fill="#8a8d9a" font-size="10">RST</text>
+  <circle cx="478" cy="261" r="4" fill="#2a2d3a" stroke="#4ade80" stroke-width="1"/>
+  <text x="460" y="285" text-anchor="end" fill="#8a8d9a" font-size="10">INT</text>
+  <circle cx="478" cy="281" r="4" fill="#2a2d3a" stroke="#4ade80" stroke-width="1"/>
+
+  <!-- Decoupling cap -->
+  <rect x="500" y="130" width="40" height="24" rx="3" fill="#2a2d3a" stroke="#fbbf24" stroke-width="1"/>
+  <text x="520" y="146" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="600">100nF</text>
+  <text x="520" y="168" text-anchor="middle" fill="#8a8d9a" font-size="7">VIN→GND</text>
+
+  <!-- WIRES -->
+  <!-- 3V3 → BNO085 VIN (green) -->
+  <path d="M 257 161 L 370 161 L 370 141 L 473 141" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="360" y="153" fill="#4ade80" font-size="9" font-weight="600">3V3</text>
+
+  <!-- GND → BNO085 GND (gray) -->
+  <path d="M 257 131 L 340 131 L 340 171 L 473 171" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="335" y="184" fill="#888" font-size="9" font-weight="600">GND</text>
+
+  <!-- GPIO6 (SDA) → BNO085 SDA (yellow) -->
+  <path d="M 83 221 L 40 221 L 40 370 L 420 370 L 420 201 L 473 201" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="230" y="383" fill="#fbbf24" font-size="9" font-weight="600">SDA (GPIO6 → BNO085)</text>
+
+  <!-- GPIO7 (SCL) → BNO085 SCL (orange) -->
+  <path d="M 83 251 L 30 251 L 30 395 L 430 395 L 430 231 L 473 231" fill="none" stroke="#fb923c" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="230" y="410" fill="#fb923c" font-size="9" font-weight="600">SCL (GPIO7 → BNO085)</text>
+
+  <!-- Battery + Switch -->
+  <rect x="80" y="350" width="170" height="55" rx="6" fill="#1a1d27" stroke="#a78bfa" stroke-width="2"/>
+  <text x="165" y="374" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="700">LiPo 3.7V</text>
+  <text x="165" y="392" text-anchor="middle" fill="#8a8d9a" font-size="9">400–1000mAh (JST-PH)</text>
+
+  <!-- Switch symbol -->
+  <rect x="170" y="318" width="50" height="18" rx="3" fill="#2a2d3a" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="195" y="331" text-anchor="middle" fill="#a78bfa" font-size="8" font-weight="600">SWITCH</text>
+
+  <!-- Battery → switch → BAT+ -->
+  <path d="M 165 350 L 165 336 L 170 336" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 220 327 L 230 327 L 230 312 L 170 312" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round"/>
+  <text x="245" y="316" fill="#f87171" font-size="8" font-weight="600">BAT+</text>
+
+  <!-- Battery GND → BAT- -->
+  <path d="M 115 350 L 115 312 L 140 312" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+  <text x="100" y="340" fill="#888" font-size="8" font-weight="600">BAT−</text>
+
+  <!-- Legend -->
+  <rect x="540" y="310" width="185" height="100" rx="6" fill="#1a1d27" stroke="#2a2d3a" stroke-width="1"/>
+  <text x="555" y="330" fill="#8a8d9a" font-size="9" font-weight="600">WIRE LEGEND</text>
+  <line x1="555" y1="345" x2="580" y2="345" stroke="#4ade80" stroke-width="2.5"/>
+  <text x="588" y="349" fill="#e0e0e8" font-size="9">3V3 Power</text>
+  <line x1="555" y1="362" x2="580" y2="362" stroke="#888" stroke-width="2.5"/>
+  <text x="588" y="366" fill="#e0e0e8" font-size="9">Ground</text>
+  <line x1="555" y1="379" x2="580" y2="379" stroke="#fbbf24" stroke-width="2.5"/>
+  <text x="588" y="383" fill="#e0e0e8" font-size="9">SDA (GPIO6)</text>
+  <line x1="555" y1="396" x2="580" y2="396" stroke="#fb923c" stroke-width="2.5"/>
+  <text x="588" y="400" fill="#e0e0e8" font-size="9">SCL (GPIO7)</text>
+</svg>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<h2>3. Connection Table</h2>
+
+<div class="card">
+<table>
+  <thead><tr><th>#</th><th>XIAO ESP32C3</th><th>→</th><th>BNO085 Breakout</th><th>Wire Color (suggested)</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><span class="wire w-green">3V3</span></td><td>→</td><td><span class="wire w-green">VIN</span></td><td>Red or Orange</td></tr>
+    <tr><td>2</td><td><span class="wire w-black">GND</span></td><td>→</td><td><span class="wire w-black">GND</span></td><td>Black</td></tr>
+    <tr><td>3</td><td><span class="wire w-yellow">D4 / GPIO6</span></td><td>→</td><td><span class="wire w-yellow">SDA</span></td><td>Yellow or Blue</td></tr>
+    <tr><td>4</td><td><span class="wire w-orange">D5 / GPIO7</span></td><td>→</td><td><span class="wire w-orange">SCL</span></td><td>Green or White</td></tr>
+  </tbody>
+</table>
+
+<table style="margin-top:1rem;">
+  <thead><tr><th>#</th><th>Component</th><th>→</th><th>XIAO ESP32C3</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>5</td><td><span class="wire w-red">LiPo (+)</span></td><td>→ switch →</td><td><span class="wire w-purple">BAT+ pad</span></td><td>Bottom pad, positive terminal through switch</td></tr>
+    <tr><td>6</td><td><span class="wire w-black">LiPo (−)</span></td><td>→</td><td><span class="wire w-purple">BAT− pad</span></td><td>Bottom pad, direct connection</td></tr>
+    <tr><td>7</td><td><span class="wire w-yellow">100nF cap</span></td><td>across</td><td>BNO085 VIN ↔ GND</td><td>Solder close to BNO085</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2>4. Step-by-Step Wiring Guide</h2>
+
+<div class="card">
+<h3>A. Prepare the Perfboard</h3>
+<ol class="step-list">
+  <li>Plan layout: place the XIAO on one side, BNO085 on the other, battery underneath or to the side. A 5×7 cm board fits everything comfortably.</li>
+  <li>Solder two rows of female pin headers (1×7) for the XIAO. This lets you pull the XIAO out for USB flashing without desoldering.</li>
+  <li>Solder female pin headers for the BNO085 breakout (1×9 or 1×7 depending on your board version). Orient it so SDA/SCL/VIN/GND face the XIAO side.</li>
+</ol>
+
+<h3>B. Power Connections</h3>
+<ol class="step-list">
+  <li>Solder the SPST slide switch onto the perfboard near the XIAO's bottom edge.</li>
+  <li>Run a wire from the LiPo's positive terminal (or JST connector pin) to one leg of the switch.</li>
+  <li>Run a wire from the other leg of the switch to the XIAO's <span class="wire w-purple">BAT+</span> pad (bottom of the board — you may need to solder from underneath).</li>
+  <li>Run a wire from the LiPo's negative terminal directly to the XIAO's <span class="wire w-purple">BAT−</span> pad.</li>
+</ol>
+
+<div class="info">
+  <strong>Built-in charging:</strong> When USB-C is plugged in, the XIAO ESP32C3 automatically charges the LiPo through its onboard charge IC. No external TP4056 needed. The charge current is ~50mA (safe for cells ≥200mAh).
+</div>
+
+<div class="warn">
+  <strong>LiPo safety:</strong> Only use cells with a built-in protection circuit (most pouch cells from reputable suppliers include one). Verify polarity with a multimeter before connecting. Reversing polarity will damage the XIAO.
+</div>
+
+<h3>C. I2C Connections (XIAO → BNO085)</h3>
+<ol class="step-list">
+  <li>Wire <span class="wire w-green">3V3</span> (XIAO right side) → <span class="wire w-green">VIN</span> (BNO085). The Adafruit BNO085 breakout has an onboard regulator and level shifter, so 3.3V input is fine.</li>
+  <li>Wire <span class="wire w-black">GND</span> (XIAO right side) → <span class="wire w-black">GND</span> (BNO085).</li>
+  <li>Wire <span class="wire w-yellow">D4 / GPIO6</span> (XIAO left side) → <span class="wire w-yellow">SDA</span> (BNO085).</li>
+  <li>Wire <span class="wire w-orange">D5 / GPIO7</span> (XIAO left side) → <span class="wire w-orange">SCL</span> (BNO085).</li>
+  <li>Solder the <span class="wire w-yellow">100nF ceramic capacitor</span> between VIN and GND on the BNO085 side, as close to the breakout as possible. This is a decoupling cap to prevent I2C noise.</li>
+</ol>
+
+<div class="info">
+  <strong>No external pull-ups needed.</strong> The Adafruit BNO085 breakout includes 10kΩ pull-up resistors on SDA and SCL.
+</div>
+
+<h3>D. Pre-Power Checklist</h3>
+<ol class="step-list">
+  <li><strong>Continuity check:</strong> Use multimeter to verify 3V3→VIN and GND→GND paths have continuity.</li>
+  <li><strong>Short check:</strong> Verify NO continuity between 3V3 and GND (no shorts).</li>
+  <li><strong>Battery polarity:</strong> Measure LiPo voltage with multimeter. Confirm (+) goes to switch → BAT+ and (−) goes to BAT−.</li>
+  <li><strong>Visual inspection:</strong> Check for solder bridges, especially around the fine-pitch XIAO pads.</li>
+</ol>
+</div>
+
+<!-- ============================================================ -->
+<h2>5. Master vs Slave — No Hardware Difference</h2>
+
+<div class="card">
+<p style="font-size:0.88rem;">All 3 boards are wired identically. The role (master or slave) is determined entirely by which firmware is flashed:</p>
+<div class="two-col" style="margin-top:0.75rem;">
+  <div style="border:1px solid var(--accent); border-radius:6px; padding:0.75rem;">
+    <span class="badge badge-master">Master</span>
+    <p style="font-size:0.85rem; margin-top:0.5rem;">Flash <code>master/</code> firmware. Connect to PC via USB-C for serial bridge. The master can also run on battery (untethered) if you add a wireless backhaul later.</p>
+  </div>
+  <div style="border:1px solid var(--green); border-radius:6px; padding:0.75rem;">
+    <span class="badge badge-slave">Slave ×2</span>
+    <p style="font-size:0.85rem; margin-top:0.5rem;">Flash <code>slave/</code> firmware. Runs on LiPo battery, completely wireless. Node ID auto-assigned from MAC address — no configuration needed.</p>
+  </div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<h2>6. Perfboard Layout Suggestion</h2>
+
+<div class="card">
+<div class="schematic-container" style="font-family: monospace; font-size: 13px; line-height: 1.5; white-space: pre; color: #e0e0e8;">
+<span style="color:#8a8d9a">        5 × 7 cm Perfboard (TOP VIEW)
+   ┌──────────────────────────────────────┐</span>
+   │                                      │
+   │  <span style="color:#a78bfa">┌──────┐</span>                            │
+   │  <span style="color:#a78bfa">│SWITCH│</span>                            │
+   │  <span style="color:#a78bfa">└──┬───┘</span>                            │
+   │     │                                │
+   │  <span style="color:#5b8def">╔══════════════╗</span>   <span style="color:#4ade80">╔═════════════╗</span>  │
+   │  <span style="color:#5b8def">║              ║</span>   <span style="color:#4ade80">║             ║</span>  │
+   │  <span style="color:#5b8def">║  XIAO        ║</span>   <span style="color:#4ade80">║  BNO085     ║</span>  │
+   │  <span style="color:#5b8def">║  ESP32C3     ║</span><span style="color:#fbbf24">───</span><span style="color:#4ade80">║  breakout   ║</span>  │
+   │  <span style="color:#5b8def">║              ║</span><span style="color:#fb923c">───</span><span style="color:#4ade80">║             ║</span>  │
+   │  <span style="color:#5b8def">║  [USB-C ↑]   ║</span>   <span style="color:#4ade80">║  <span style="color:#fbbf24">[C]</span>100nF   ║</span>  │
+   │  <span style="color:#5b8def">╚══════════════╝</span>   <span style="color:#4ade80">╚═════════════╝</span>  │
+   │  <span style="color:#a78bfa">┌──BAT pads──┐</span>                      │
+   │                                      │
+   │  <span style="color:#a78bfa">╔══════════════╗</span>                    │
+   │  <span style="color:#a78bfa">║  LiPo Cell   ║</span>  <span style="color:#8a8d9a">(underneath or</span>    │
+   │  <span style="color:#a78bfa">║  3.7V        ║</span>  <span style="color:#8a8d9a"> taped to back)</span>   │
+   │  <span style="color:#a78bfa">╚══════════════╝</span>                    │
+   │                                      │
+   <span style="color:#8a8d9a">└──────────────────────────────────────┘</span>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<h2>7. Power Specs & Battery Life Estimate</h2>
+
+<div class="card">
+<table>
+  <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>XIAO ESP32C3 active (WiFi TX)</td><td>~120mA peak, ~80mA avg</td></tr>
+    <tr><td>BNO085 active (3 reports)</td><td>~15mA</td></tr>
+    <tr><td>Total per node (streaming)</td><td>~95–135mA</td></tr>
+    <tr><td>500mAh LiPo → runtime</td><td>~3.5–5 hours streaming</td></tr>
+    <tr><td>1000mAh LiPo → runtime</td><td>~7–10 hours streaming</td></tr>
+    <tr><td>XIAO charge current (USB-C)</td><td>~50mA (built-in IC)</td></tr>
+  </tbody>
+</table>
+<p class="note">Estimates assume continuous ESP-NOW TX at 100Hz. Idle/beacon mode draws significantly less (~20mA).</p>
+</div>
+
+</body>
+</html>

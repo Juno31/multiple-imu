@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head -20 grep -rn \"typedef.*wifi_tx_info_t\\\\|struct wifi_tx_info\" /Users/ummm__31/Desktop/esp/esp-idf/components/esp_wifi/include/)",
+      "Bash(idf.py build)",
+      "Bash(source /Users/ummm__31/Desktop/esp/esp-idf/export.sh)",
+      "Bash(echo \"PATH=$PATH\")",
+      "Bash(/Users/ummm__31/Desktop/esp/esp-idf/tools/idf.py build)",
+      "Bash(/Users/ummm__31/.espressif/python_env/idf6.1_py3.12_env/bin/python /Users/ummm__31/Desktop/esp/esp-idf/tools/idf.py build)",
+      "Bash(IDF_PATH=/Users/ummm__31/Desktop/esp/esp-idf IDF_PYTHON_ENV_PATH=/Users/ummm__31/.espressif/python_env/idf6.1_py3.12_env PATH=\"/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin:/Users/ummm__31/.espressif/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin:$PATH\" /Users/ummm__31/.espressif/python_env/idf6.1_py3.12_env/bin/python /Users/ummm__31/Desktop/esp/esp-idf/tools/idf.py build)",
+      "Bash(IDF_PATH=/Users/ummm__31/Desktop/esp/esp-idf IDF_PYTHON_ENV_PATH=/Users/ummm__31/.espressif/python_env/idf6.1_py3.12_env PATH=\"/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin:/Applications/CLion.app/Contents/bin/ninja/mac/aarch64:/Users/ummm__31/.espressif/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin:$PATH\" /Users/ummm__31/.espressif/python_env/idf6.1_py3.12_env/bin/python /Users/ummm__31/Desktop/esp/esp-idf/tools/idf.py build)",
+      "Bash(/Users/ummm__31/.espressif/python_env/idf6.1_py3.12_env/bin/python -m esptool --chip esp32c3 -p /dev/cu.usbmodem2101 -b 460800 --before default-reset --after hard-reset write-flash --flash-mode dio --flash-size 2MB --flash-freq 80m 0x0 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x10000 build/imu_slave.bin)",
+      "Bash(/Users/ummm__31/.espressif/python_env/idf6.1_py3.12_env/bin/python -c \":*)",
+      "Bash(/Users/ummm__31/.espressif/python_env/idf6.1_py3.12_env/bin/python -m esptool --chip esp32c3 -p /dev/cu.usbmodem2101 -b 460800 --before default-reset --after hard-reset write-flash --flash-mode dio --flash-size 2MB --flash-freq 80m 0x0 /Users/ummm__31/Desktop/esp/projects/multiple-imu/slave/build/bootloader/bootloader.bin 0x8000 /Users/ummm__31/Desktop/esp/projects/multiple-imu/slave/build/partition_table/partition-table.bin 0x10000 /Users/ummm__31/Desktop/esp/projects/multiple-imu/slave/build/imu_slave.bin)",
+      "Bash(IDF_PATH=/Users/ummm__31/Desktop/esp/esp-idf IDF_PYTHON_ENV_PATH=/Users/ummm__31/.espressif/python_env/idf6.1_py3.12_env PATH=\"/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin:/Applications/CLion.app/Contents/bin/ninja/mac/aarch64:/Users/ummm__31/.espressif/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin:$PATH\" /Users/ummm__31/.espressif/python_env/idf6.1_py3.12_env/bin/python /Users/ummm__31/Desktop/esp/esp-idf/tools/idf.py fullclean)",
+      "Bash(claude remote-control:*)"
+    ]
+  }
+}

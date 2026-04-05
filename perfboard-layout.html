@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfboard Layout — Wearable IMU Node</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background: #0A0A0F;
+    color: #E2E8F0;
+    min-height: 100vh;
+    padding: 2.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .page-header {
+    text-align: center;
+    max-width: 640px;
+  }
+  .page-header h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #F1F5F9;
+    margin-bottom: 0.35rem;
+  }
+  .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #fff;
+    padding: 0.2rem 0.65rem;
+    border-radius: 100px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+    margin-left: 0.5rem;
+    text-transform: uppercase;
+  }
+  .page-header .subtitle {
+    color: #64748B;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .legend-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.4rem;
+    justify-content: center;
+    max-width: 780px;
+    padding: 0.9rem 1.4rem;
+    background: #12121A;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #94A3B8;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .legend-swatch {
+    width: 20px;
+    height: 3px;
+    border-radius: 2px;
+  }
+  .legend-swatch.dashed {
+    background: repeating-linear-gradient(90deg, currentColor 0, currentColor 4px, transparent 4px, transparent 7px);
+    height: 2px;
+  }
+  .legend-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .board-card {
+    background: #12121A;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px;
+    padding: 1.6rem;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.03),
+      0 4px 24px rgba(0,0,0,0.4),
+      0 1px 3px rgba(0,0,0,0.3);
+  }
+  .board-card .view-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 1rem;
+  }
+
+  .info-panel {
+    background: #12121A;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 1.4rem 1.6rem;
+    max-width: 780px;
+    font-size: 0.8rem;
+    line-height: 1.85;
+    color: #94A3B8;
+  }
+  .info-panel strong {
+    color: #CBD5E1;
+    font-weight: 700;
+  }
+  .info-panel .section {
+    margin-bottom: 0.9rem;
+  }
+  .info-panel .section:last-child {
+    margin-bottom: 0;
+  }
+  .info-panel .highlight {
+    color: #10B981;
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 1.2rem 0.8rem; }
+    .board-card { padding: 0.8rem; border-radius: 14px; }
+    .board-card svg { max-width: 100%; height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Perfboard Layout <span class="badge">~3.3 x 2.5 cm</span></h1>
+  <p class="subtitle">Wearable IMU Node &middot; XIAO ESP32C3 + BNO085 &middot; All 3 nodes identical</p>
+</div>
+
+<div class="legend-bar">
+  <div class="legend-item"><div class="legend-swatch" style="background:#34D399"></div> 3V3&rarr;VIN (top)</div>
+  <div class="legend-item"><div class="legend-swatch dashed" style="color:#6B7280"></div> GND (bottom)</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#FBBF24"></div> SDA (top)</div>
+  <div class="legend-item"><div class="legend-swatch dashed" style="color:#F97316"></div> SCL (bottom)</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#A78BFA"></div> Battery</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#FCD34D"></div> 100nF cap</div>
+  <div class="legend-item">
+    <div class="legend-icon"><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="none" stroke="#34D399" stroke-width="2"/></svg></div> Top solder
+  </div>
+  <div class="legend-item">
+    <div class="legend-icon"><svg width="14" height="14"><rect x="2" y="2" width="10" height="10" rx="1" fill="none" stroke="#FBBF24" stroke-width="2"/></svg></div> Bottom solder
+  </div>
+</div>
+
+<div class="board-card">
+  <div class="view-label">Top View &mdash; Component Side</div>
+  <svg id="board-top" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<div class="board-card">
+  <div class="view-label">Bottom View &mdash; Solder Side (mirrored)</div>
+  <svg id="board-bottom" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<div class="info-panel">
+  <div class="section">
+    <strong>Board dimensions:</strong> Cut perfboard to 13 &times; 10 holes (~3.3 &times; 2.5 cm).
+    BNO085 breakout overhangs right edge &mdash; only pin header sits on the board. Secure overhang with hot glue or epoxy.
+  </div>
+  <div class="section">
+    <strong>Routing:</strong> 3V3&rarr;VIN is a short top-side L-shape (3 hops).
+    GND&rarr;GND runs on the bottom side via gap col J (4 hops).
+    <span class="highlight">I2C crossing:</span> BNO085 pin order is SCL-then-SDA (opposite XIAO),
+    so SDA routes on the <strong>top side</strong> as L-shape (B5&rarr;J5&rarr;J6&rarr;K6) and
+    SCL routes on the <strong>bottom side</strong> as mirror L-shape (B6&rarr;J6&rarr;J5&rarr;K5).
+    They cross at col J on opposite sides &mdash; no short. Max wire: ~25.4 mm (10 holes).
+  </div>
+  <div class="section">
+    <strong>Decoupling:</strong> 100 nF cap bridges VIN and GND right next to BNO085.
+  </div>
+  <div class="section">
+    <strong>Battery:</strong> BAT+ &rarr; external switch &rarr; LiPo(+). BAT&minus; &rarr; LiPo(&minus;) direct. Switch mounted on housing.
+    Charging via TP4057 module (separate station &mdash; disconnect LiPo from board first).
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  TOP VIEW
+// ════════════════════════════════════════════════════════════════
+(function(){
+  const svg = document.getElementById('board-top');
+  const NS = 'http://www.w3.org/2000/svg';
+
+  const COLS = 13, ROWS = 10;
+  const S = 32;
+  const PX = 58, PY = 50;
+  const HR = 3.6;
+
+  const W = PX + 30 + (COLS - 1) * S + 140;
+  const H = PY * 2 + (ROWS - 1) * S + 20;
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  function xp(c) { return PX + c * S; }
+  function yp(r) { return PY + r * S; }
+
+  function el(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+    svg.appendChild(e);
+    return e;
+  }
+
+  function addDefs() {
+    const defs = document.createElementNS(NS, 'defs');
+
+    // Board gradient
+    const bg = document.createElementNS(NS, 'linearGradient');
+    bg.setAttribute('id', 'boardGrad');
+    bg.setAttribute('x1', '0%'); bg.setAttribute('y1', '0%');
+    bg.setAttribute('x2', '100%'); bg.setAttribute('y2', '100%');
+    let s1 = document.createElementNS(NS, 'stop');
+    s1.setAttribute('offset', '0%'); s1.setAttribute('stop-color', '#1B5E3A');
+    let s2 = document.createElementNS(NS, 'stop');
+    s2.setAttribute('offset', '100%'); s2.setAttribute('stop-color', '#14452A');
+    bg.appendChild(s1); bg.appendChild(s2);
+    defs.appendChild(bg);
+
+    // Copper pad gradient
+    const cp = document.createElementNS(NS, 'radialGradient');
+    cp.setAttribute('id', 'copperPad');
+    let cs1 = document.createElementNS(NS, 'stop');
+    cs1.setAttribute('offset', '0%'); cs1.setAttribute('stop-color', '#1A3D28');
+    let cs2 = document.createElementNS(NS, 'stop');
+    cs2.setAttribute('offset', '100%'); cs2.setAttribute('stop-color', '#0F2A1B');
+    cp.appendChild(cs1); cp.appendChild(cs2);
+    defs.appendChild(cp);
+
+    // XIAO gradient
+    const xg = document.createElementNS(NS, 'linearGradient');
+    xg.setAttribute('id', 'xiaoGrad');
+    xg.setAttribute('x1', '0%'); xg.setAttribute('y1', '0%');
+    xg.setAttribute('x2', '100%'); xg.setAttribute('y2', '100%');
+    let xg1 = document.createElementNS(NS, 'stop');
+    xg1.setAttribute('offset', '0%'); xg1.setAttribute('stop-color', '#0C1425');
+    let xg2 = document.createElementNS(NS, 'stop');
+    xg2.setAttribute('offset', '100%'); xg2.setAttribute('stop-color', '#080E1C');
+    xg.appendChild(xg1); xg.appendChild(xg2);
+    defs.appendChild(xg);
+
+    // BNO gradient
+    const bng = document.createElementNS(NS, 'linearGradient');
+    bng.setAttribute('id', 'bnoGrad');
+    bng.setAttribute('x1', '0%'); bng.setAttribute('y1', '0%');
+    bng.setAttribute('x2', '100%'); bng.setAttribute('y2', '100%');
+    let bg1 = document.createElementNS(NS, 'stop');
+    bg1.setAttribute('offset', '0%'); bg1.setAttribute('stop-color', '#042015');
+    let bg2 = document.createElementNS(NS, 'stop');
+    bg2.setAttribute('offset', '100%'); bg2.setAttribute('stop-color', '#021A0F');
+    bng.appendChild(bg1); bng.appendChild(bg2);
+    defs.appendChild(bng);
+
+    // Glow filter
+    const glow = document.createElementNS(NS, 'filter');
+    glow.setAttribute('id', 'wireGlow');
+    glow.setAttribute('x', '-20%'); glow.setAttribute('y', '-20%');
+    glow.setAttribute('width', '140%'); glow.setAttribute('height', '140%');
+    const blur = document.createElementNS(NS, 'feGaussianBlur');
+    blur.setAttribute('in', 'SourceGraphic');
+    blur.setAttribute('stdDeviation', '2');
+    glow.appendChild(blur);
+    defs.appendChild(glow);
+
+    // Solder side gradient for bottom
+    const sg = document.createElementNS(NS, 'linearGradient');
+    sg.setAttribute('id', 'solderGrad');
+    sg.setAttribute('x1', '0%'); sg.setAttribute('y1', '0%');
+    sg.setAttribute('x2', '100%'); sg.setAttribute('y2', '100%');
+    let sg1 = document.createElementNS(NS, 'stop');
+    sg1.setAttribute('offset', '0%'); sg1.setAttribute('stop-color', '#3D2B1F');
+    let sg2 = document.createElementNS(NS, 'stop');
+    sg2.setAttribute('offset', '100%'); sg2.setAttribute('stop-color', '#2C1E14');
+    sg.appendChild(sg1); sg.appendChild(sg2);
+    defs.appendChild(sg);
+
+    svg.appendChild(defs);
+  }
+  addDefs();
+
+  // Helpers
+  function rect(x1,y1,w,h,fill,stroke,sw,rx,dashArr) {
+    const a = {x:x1,y:y1,width:w,height:h,fill,stroke,'stroke-width':sw||1.5,rx:rx||4};
+    if (dashArr) a['stroke-dasharray'] = dashArr;
+    return el('rect', a);
+  }
+  function circ(cx,cy,r,fill,stroke,sw) {
+    return el('circle', {cx,cy,r,fill:fill||'none',stroke:stroke||'none','stroke-width':sw||1});
+  }
+  function txt(x1,y1,text,size,color,anchor,weight,style) {
+    const t = el('text', {x:x1,y:y1,fill:color||'#ccc','font-size':size||10,'text-anchor':anchor||'middle','font-family':"'JetBrains Mono','Fira Code',monospace",'dominant-baseline':'central'});
+    if (weight) t.setAttribute('font-weight', weight);
+    if (style) t.setAttribute('font-style', style);
+    t.textContent = text;
+    return t;
+  }
+  function polyline(pts, color, w, dash) {
+    const a = {
+      points: pts.map(([c,r]) => `${xp(c)},${yp(r)}`).join(' '),
+      fill: 'none', stroke: color, 'stroke-width': w || 2.5,
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+    };
+    if (dash) a['stroke-dasharray'] = '7,4';
+    el('polyline', a);
+  }
+  function polyGlow(pts, color, w) {
+    const a = {
+      points: pts.map(([c,r]) => `${xp(c)},${yp(r)}`).join(' '),
+      fill: 'none', stroke: color, 'stroke-width': (w || 2.5) + 4,
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+      opacity: 0.15, filter: 'url(#wireGlow)'
+    };
+    el('polyline', a);
+  }
+  function fillHole(c,r,color) {
+    circ(xp(c),yp(r),HR+1.5,color+'22',color+'44',0.5);
+    circ(xp(c),yp(r),HR,color,color,0.5);
+  }
+  function markTop(c,r,color) {
+    circ(xp(c),yp(r),7.5,'none',color,2.5);
+  }
+  function markBot(c,r,color) {
+    rect(xp(c)-7.5,yp(r)-7.5,15,15,'none',color,2.5,2);
+  }
+
+  // Component positions
+  const XL = 1, XR = 8, XRS = 1;
+  const BC = 10, BRS = 2;
+  const CC = 11, BR = 8;
+
+  // ── Board background with rounded corners ──
+  const boardX = xp(0) - S/2;
+  const boardY = yp(0) - S/2;
+  const boardW = COLS * S;
+  const boardH = ROWS * S;
+  rect(boardX, boardY, boardW, boardH, 'url(#boardGrad)', '#2D6A4F', 2, 10);
+
+  // Subtle grid lines
+  for (let c = 0; c < COLS; c++) {
+    el('line', {x1:xp(c), y1:yp(0)-S/2+5, x2:xp(c), y2:yp(ROWS-1)+S/2-5, stroke:'#1B4332', 'stroke-width':0.4, opacity:0.5});
+  }
+  for (let r = 0; r < ROWS; r++) {
+    el('line', {x1:xp(0)-S/2+5, y1:yp(r), x2:xp(COLS-1)+S/2-5, y2:yp(r), stroke:'#1B4332', 'stroke-width':0.4, opacity:0.5});
+  }
+
+  // Column labels
+  for (let c = 0; c < COLS; c++) txt(xp(c), PY - 20, String.fromCharCode(65+c), 10, '#5E8B72', 'middle', '600');
+  // Row labels
+  for (let r = 0; r < ROWS; r++) txt(PX - 24, yp(r), String(r+1), 10, '#5E8B72', 'middle', '600');
+
+  // ── Holes ──
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      circ(xp(c), yp(r), HR + 2, 'none', '#3D7A55', 0.3);
+      circ(xp(c), yp(r), HR, '#0D2818', '#4A7A5E', 0.7);
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // XIAO ESP32C3
+  // ═══════════════════════════════════════
+  rect(xp(XL) - 12, yp(XRS) - S*0.65, xp(XR) - xp(XL) + 24, S * 7.3, 'url(#xiaoGrad)', '#3B82F6', 1.8, 6);
+  // Inner highlight line
+  el('line', {x1:xp(XL)-10, y1:yp(XRS)-S*0.65+1.5, x2:xp(XR)+10, y2:yp(XRS)-S*0.65+1.5, stroke:'rgba(255,255,255,0.08)', 'stroke-width':1});
+
+  // USB-C
+  const usbW = 30, usbH = 14;
+  rect(xp(4.5) - usbW/2, yp(XRS) - S*0.65 - usbH + 2, usbW, usbH, '#1E293B', '#64748B', 1.2, 4);
+  txt(xp(4.5), yp(XRS) - S*0.65 - usbH/2 + 2, 'USB-C', 6.5, '#94A3B8', 'middle', '600');
+
+  // XIAO label
+  txt(xp(4.5), yp(XRS + 2.3), 'XIAO', 16, 'rgba(255,255,255,0.9)', 'middle', '800');
+  txt(xp(4.5), yp(XRS + 2.3) + 16, 'ESP32C3', 9, '#60A5FA', 'middle', '600');
+
+  // Left pins D0–D6
+  const LP = [
+    {l:'D0',c:'#64748B'},{l:'D1',c:'#64748B'},{l:'D2',c:'#64748B'},{l:'D3',c:'#64748B'},
+    {l:'D4',c:'#FBBF24',s:'SDA'},{l:'D5',c:'#F97316',s:'SCL'},{l:'D6',c:'#64748B'},
+  ];
+  LP.forEach((p, i) => {
+    const r = XRS + i;
+    fillHole(XL, r, p.c);
+    txt(xp(XL) - 15, yp(r), p.l, 9, p.c, 'end', '700');
+    if (p.s) {
+      txt(xp(XL) - 40, yp(r), p.s, 8, p.c, 'end', '800');
+    }
+  });
+
+  // Right pins 5V, GND, 3V3, D10–D7
+  const RP = [
+    {l:'5V',c:'#EF4444'},{l:'GND',c:'#6B7280'},{l:'3V3',c:'#34D399'},
+    {l:'D10',c:'#64748B'},{l:'D9',c:'#64748B'},{l:'D8',c:'#64748B'},{l:'D7',c:'#64748B'},
+  ];
+  RP.forEach((p, i) => {
+    const r = XRS + i;
+    fillHole(XR, r, p.c);
+    txt(xp(XR) + 15, yp(r), p.l, 9, p.c, 'start', '700');
+  });
+
+  // BAT pads
+  rect(xp(3.5), yp(BR) - 10, xp(5.5) - xp(3.5), 20, '#1A1030', '#8B5CF6', 1.5, 5);
+  fillHole(4, BR, '#A78BFA');
+  fillHole(5, BR, '#6B7280');
+  txt(xp(4), yp(BR) + 18, 'BAT+', 7.5, '#C4B5FD', 'middle', '700');
+  txt(xp(5), yp(BR) + 18, 'BAT\u2212', 7.5, '#9CA3AF', 'middle', '700');
+
+  // ═══════════════════════════════════════
+  // BNO085
+  // ═══════════════════════════════════════
+  // Pin-side on board
+  rect(xp(BC) - 12, yp(BRS) - 14, 24, S * 5.9, 'url(#bnoGrad)', '#22C55E', 1.8, 6);
+  // Overhang body (dashed)
+  rect(xp(BC) + 12, yp(BRS) - 14, S * 3.5, S * 5.9, 'url(#bnoGrad)', '#22C55E', 1.2, 6, '7,4');
+
+  // BNO label inside overhang
+  const bnoLabelX = xp(BC) + 12 + S * 1.75;
+  txt(bnoLabelX, yp(BRS + 2.2), 'BNO085', 14, 'rgba(255,255,255,0.85)', 'middle', '800');
+  txt(bnoLabelX, yp(BRS + 2.2) + 16, 'Breakout', 9, '#86EFAC', 'middle', '600');
+  txt(bnoLabelX, yp(BRS + 2.2) + 30, '(overhangs edge)', 7, 'rgba(134,239,172,0.4)', 'middle', '500');
+
+  // BNO pins: VIN, 3Vo, GND, SCL, SDA, INT
+  const BP = [
+    {l:'VIN',c:'#34D399',r:BRS},
+    {l:'3Vo',c:'#5E8B72',r:BRS+1},
+    {l:'GND',c:'#6B7280',r:BRS+2},
+    {l:'SCL',c:'#F97316',r:BRS+3},
+    {l:'SDA',c:'#FBBF24',r:BRS+4},
+    {l:'INT',c:'#5E8B72',r:BRS+5},
+  ];
+  BP.forEach(p => {
+    fillHole(BC, p.r, p.c);
+    txt(xp(BC) - 15, yp(p.r), p.l, 9, p.c, 'end', '700');
+  });
+
+  // ═══════════════════════════════════════
+  // 100nF Cap
+  // ═══════════════════════════════════════
+  rect(xp(CC) - 8, yp(BRS) + 4, 16, yp(BRS+2) - yp(BRS) - 8, '#3D2800', '#FCD34D', 1.8, 3);
+  fillHole(CC, BRS, '#FCD34D');
+  fillHole(CC, BRS + 2, '#FCD34D');
+  el('line', {x1:xp(CC), y1:yp(BRS), x2:xp(CC), y2:yp(BRS+2), stroke:'#FCD34D', 'stroke-width':1.5, 'stroke-linecap':'round'});
+  // Bridge wires
+  el('line', {x1:xp(BC), y1:yp(BRS), x2:xp(CC), y2:yp(BRS), stroke:'#FCD34D', 'stroke-width':1.2, 'stroke-linecap':'round', opacity:0.7});
+  el('line', {x1:xp(BC), y1:yp(BRS+2), x2:xp(CC), y2:yp(BRS+2), stroke:'#6B7280', 'stroke-width':1.2, 'stroke-linecap':'round', opacity:0.7});
+  txt(xp(CC) + 16, yp(BRS + 1), '100nF', 8, '#FCD34D', 'start', '700');
+
+  // ═══════════════════════════════════════
+  // WIRE 1: 3V3 (I,3) → VIN (K,2) — TOP SIDE
+  // ═══════════════════════════════════════
+  const w1pts = [[XR, XRS + 2], [9, XRS + 2], [9, BRS], [BC, BRS]];
+  polyGlow(w1pts, '#34D399', 3.5);
+  polyline(w1pts, '#34D399', 3);
+  markTop(XR, XRS + 2, '#34D399');
+  markTop(BC, BRS, '#34D399');
+  txt(xp(9), yp(XRS + 0.8), '3V3\u2192VIN', 7.5, '#34D399', 'middle', '700');
+
+  // ═══════════════════════════════════════
+  // WIRE 2: GND (I,2) → GND (K,4) — BOTTOM SIDE
+  // ═══════════════════════════════════════
+  const w2pts = [[XR, XRS + 1], [9, XRS + 1], [9, BRS + 2], [BC, BRS + 2]];
+  polyline(w2pts, '#6B7280', 2.5, true);
+  markBot(XR, XRS + 1, '#6B7280');
+  markBot(BC, BRS + 2, '#6B7280');
+  txt(xp(9) + 16, yp(BRS + 0.7), 'GND', 7.5, '#9CA3AF', 'start', '700');
+  txt(xp(9) + 16, yp(BRS + 0.7) + 12, '(bottom)', 6.5, '#64748B', 'start', '500');
+
+  // ═══════════════════════════════════════
+  // WIRE 3: SDA — D4(B,5) → BNO SDA(K,6) — TOP SIDE
+  // ═══════════════════════════════════════
+  const sdaR = XRS + 4;
+  const bnaSdaR = BRS + 4;
+  const w3pts = [[XL, sdaR], [9, sdaR], [9, bnaSdaR], [BC, bnaSdaR]];
+  polyGlow(w3pts, '#FBBF24', 3.5);
+  polyline(w3pts, '#FBBF24', 3);
+  markTop(XL, sdaR, '#FBBF24');
+  markTop(BC, bnaSdaR, '#FBBF24');
+  txt(xp(5), yp(sdaR) - 12, 'SDA \u2014 L-shape, TOP', 7.5, '#FBBF24', 'middle', '700');
+
+  // ═══════════════════════════════════════
+  // WIRE 4: SCL — D5(B,6) → BNO SCL(K,5) — BOTTOM SIDE
+  // ═══════════════════════════════════════
+  const sclR = XRS + 5;
+  const bnaSclR = BRS + 3;
+  const w4pts = [[XL, sclR], [9, sclR], [9, bnaSclR], [BC, bnaSclR]];
+  polyline(w4pts, '#F97316', 2.5, true);
+  markBot(XL, sclR, '#F97316');
+  markBot(BC, bnaSclR, '#F97316');
+  txt(xp(5), yp(sclR) + 16, 'SCL \u2014 L-shape, BOTTOM', 7.5, '#F97316', 'middle', '700');
+
+  // ═══════════════════════════════════════
+  // Battery wires
+  // ═══════════════════════════════════════
+  markTop(4, BR, '#A78BFA');
+  el('line', {x1:xp(4), y1:yp(BR), x2:xp(4), y2:yp(BR)+S*1.1, stroke:'#A78BFA', 'stroke-width':2, 'stroke-linecap':'round'});
+  txt(xp(4), yp(BR) + S*1.1 + 14, '\u2192 switch \u2192 LiPo(+)', 7, '#C4B5FD', 'middle', '600');
+
+  markTop(5, BR, '#6B7280');
+  el('line', {x1:xp(5), y1:yp(BR), x2:xp(5), y2:yp(BR)+S*1.1, stroke:'#6B7280', 'stroke-width':2, 'stroke-linecap':'round'});
+  txt(xp(5), yp(BR) + S*1.1 + 26, '\u2192 LiPo(\u2212)', 7, '#9CA3AF', 'middle', '600');
+
+  txt(xp(4.5), yp(BR) + S*1.1 + 42, 'switch on housing', 7, 'rgba(167,139,250,0.35)', 'middle', '500', 'italic');
+
+  // ═══════════════════════════════════════
+  // Cut line
+  // ═══════════════════════════════════════
+  rect(boardX - 4, boardY - 4, boardW + 8, boardH + 8, 'none', 'rgba(239,68,68,0.35)', 1.5, 0, '10,5');
+  txt(xp(6), boardY - 14, '\u2190 cut: 13\u00d710 holes (~3.3\u00d72.5 cm) \u2192', 8, 'rgba(239,68,68,0.6)', 'middle', '600');
+
+  // Dimension note
+  txt(xp(5.5), yp(sclR + 2.5), '\u2190 SDA/SCL: 10 holes = 25.4 mm (L-shape, cross at col J) \u2192', 8, '#64748B', 'middle', '500');
+})();
+
+// ════════════════════════════════════════════════════════════════
+//  BOTTOM VIEW — solder side, horizontally mirrored
+// ════════════════════════════════════════════════════════════════
+(function(){
+  const svg = document.getElementById('board-bottom');
+  const NS = 'http://www.w3.org/2000/svg';
+
+  const COLS = 13, ROWS = 10;
+  const S = 32;
+  const PX = 58, PY = 50;
+  const HR = 3.6;
+
+  const W = PX + 30 + (COLS - 1) * S + 140;
+  const H = PY * 2 + (ROWS - 1) * S + 20;
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  function mx(c) { return PX + (COLS - 1 - c) * S; }
+  function my(r) { return PY + r * S; }
+
+  function el(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+    svg.appendChild(e);
+    return e;
+  }
+  function rect(x1,y1,w,h,fill,stroke,sw,rx,dashArr) {
+    const a = {x:x1,y:y1,width:w,height:h,fill,stroke,'stroke-width':sw||1.5,rx:rx||4};
+    if (dashArr) a['stroke-dasharray'] = dashArr;
+    return el('rect', a);
+  }
+  function circ(cx,cy,r,fill,stroke,sw) {
+    return el('circle',{cx,cy,r,fill:fill||'none',stroke:stroke||'none','stroke-width':sw||1});
+  }
+  function txt(x1,y1,text,size,color,anchor,weight,style) {
+    const t = el('text',{x:x1,y:y1,fill:color||'#ccc','font-size':size||10,'text-anchor':anchor||'middle','font-family':"'JetBrains Mono','Fira Code',monospace",'dominant-baseline':'central'});
+    if (weight) t.setAttribute('font-weight',weight);
+    if (style) t.setAttribute('font-style',style);
+    t.textContent = text;
+  }
+  function polyline2(pts,color,w,dash) {
+    const a = {points:pts.map(([c,r])=>`${mx(c)},${my(r)}`).join(' '),fill:'none',stroke:color,'stroke-width':w||2.5,'stroke-linecap':'round','stroke-linejoin':'round'};
+    if (dash) a['stroke-dasharray'] = '7,4';
+    el('polyline',a);
+  }
+  function polyGlow2(pts,color,w) {
+    const a = {points:pts.map(([c,r])=>`${mx(c)},${my(r)}`).join(' '),fill:'none',stroke:color,'stroke-width':(w||2.5)+4,'stroke-linecap':'round','stroke-linejoin':'round',opacity:0.15,filter:'url(#wireGlow2)'};
+    el('polyline',a);
+  }
+  function solderPad(c,r,color) {
+    circ(mx(c),my(r),HR+3,color+'22',color+'44',0.5);
+    circ(mx(c),my(r),HR+1,color+'55',color,2);
+    circ(mx(c),my(r),HR,color,color,0.5);
+  }
+
+  // Defs for bottom view
+  const defs = document.createElementNS(NS, 'defs');
+  const glow2 = document.createElementNS(NS, 'filter');
+  glow2.setAttribute('id', 'wireGlow2');
+  glow2.setAttribute('x', '-20%'); glow2.setAttribute('y', '-20%');
+  glow2.setAttribute('width', '140%'); glow2.setAttribute('height', '140%');
+  const blur2 = document.createElementNS(NS, 'feGaussianBlur');
+  blur2.setAttribute('in', 'SourceGraphic');
+  blur2.setAttribute('stdDeviation', '2');
+  glow2.appendChild(blur2);
+  defs.appendChild(glow2);
+  svg.appendChild(defs);
+
+  const XL=1, XR=8, XRS=1;
+  const BC=10, BRS=2;
+  const CC=11, BR=8;
+
+  // Board background (solder brown)
+  const x0 = mx(COLS-1);
+  const bW = mx(0) - mx(COLS-1) + S;
+  rect(x0 - S/2, my(0) - S/2, bW, ROWS * S, '#2C1E14', '#5C4033', 2, 10);
+
+  // Subtle grid lines
+  for (let c = 0; c < COLS; c++) {
+    el('line', {x1:mx(c), y1:my(0)-S/2+5, x2:mx(c), y2:my(ROWS-1)+S/2-5, stroke:'#3D2B1F', 'stroke-width':0.4, opacity:0.5});
+  }
+  for (let r = 0; r < ROWS; r++) {
+    el('line', {x1:mx(COLS-1)-S/2+5, y1:my(r), x2:mx(0)+S/2-5, y2:my(r), stroke:'#3D2B1F', 'stroke-width':0.4, opacity:0.5});
+  }
+
+  // Column labels (mirrored)
+  for (let c = 0; c < COLS; c++) txt(mx(c), PY - 20, String.fromCharCode(65+c), 10, '#8B7355', 'middle', '600');
+  // Row labels
+  for (let r = 0; r < ROWS; r++) txt(mx(-1) + 18, my(r), String(r+1), 10, '#8B7355', 'middle', '600');
+
+  // Holes with copper pads
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      circ(mx(c), my(r), HR + 2.5, 'none', '#8B6914', 0.3);
+      circ(mx(c), my(r), HR + 1, 'none', '#6B5010', 0.5);
+      circ(mx(c), my(r), HR, '#1A1008', '#5C4A2A', 0.7);
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // Ghost outlines of components
+  // ═══════════════════════════════════════
+  const xiaoMinX = Math.min(mx(XR), mx(XL));
+  const xiaoMaxX = Math.max(mx(XR), mx(XL));
+  el('rect',{x:xiaoMinX-12,y:my(XRS)-S*0.65,width:xiaoMaxX-xiaoMinX+24,height:S*7.3,
+    fill:'none',stroke:'rgba(96,165,250,0.25)','stroke-width':1.5,rx:6,'stroke-dasharray':'8,4'});
+  txt((mx(XL)+mx(XR))/2, my(XRS+2.3), 'XIAO', 14, 'rgba(96,165,250,0.35)', 'middle', '700');
+  txt((mx(XL)+mx(XR))/2, my(XRS+2.3)+14, '(top side)', 8, 'rgba(96,165,250,0.25)', 'middle', '500');
+
+  // BNO ghost
+  el('rect',{x:mx(BC)-12,y:my(BRS)-14,width:24,height:S*5.9,
+    fill:'none',stroke:'rgba(34,197,94,0.25)','stroke-width':1.5,rx:6,'stroke-dasharray':'8,4'});
+  txt(mx(BC), my(BRS+2.5)+14, 'BNO', 10, 'rgba(34,197,94,0.35)', 'middle', '700');
+
+  // Pin labels (mirrored)
+  const LP = [
+    {l:'D0',c:'#64748B'},{l:'D1',c:'#64748B'},{l:'D2',c:'#64748B'},{l:'D3',c:'#64748B'},
+    {l:'D4',c:'#FBBF24',s:'SDA'},{l:'D5',c:'#F97316',s:'SCL'},{l:'D6',c:'#64748B'},
+  ];
+  LP.forEach((p,i) => {
+    const r = XRS+i;
+    circ(mx(XL),my(r),HR,'#1A1008','#5C4A2A',0.7);
+    txt(mx(XL)+15, my(r), p.l, 9, p.c, 'start', '700');
+    if (p.s) txt(mx(XL)+40, my(r), p.s, 8, p.c, 'start', '800');
+  });
+
+  const RP = [
+    {l:'5V',c:'#EF4444'},{l:'GND',c:'#6B7280'},{l:'3V3',c:'#34D399'},
+    {l:'D10',c:'#64748B'},{l:'D9',c:'#64748B'},{l:'D8',c:'#64748B'},{l:'D7',c:'#64748B'},
+  ];
+  RP.forEach((p,i) => {
+    const r = XRS+i;
+    circ(mx(XR),my(r),HR,'#1A1008','#5C4A2A',0.7);
+    txt(mx(XR)-15, my(r), p.l, 9, p.c, 'end', '700');
+  });
+
+  // BNO pins
+  const BP = [
+    {l:'VIN',c:'#34D399',r:BRS},{l:'3Vo',c:'#5E8B72',r:BRS+1},{l:'GND',c:'#6B7280',r:BRS+2},
+    {l:'SCL',c:'#F97316',r:BRS+3},{l:'SDA',c:'#FBBF24',r:BRS+4},{l:'INT',c:'#5E8B72',r:BRS+5},
+  ];
+  BP.forEach(p => {
+    circ(mx(BC),my(p.r),HR,'#1A1008','#5C4A2A',0.7);
+    txt(mx(BC)+15, my(p.r), p.l, 9, p.c, 'start', '700');
+  });
+
+  // BAT pads
+  circ(mx(4),my(BR),HR,'#1A1008','#5C4A2A',0.7);
+  circ(mx(5),my(BR),HR,'#1A1008','#5C4A2A',0.7);
+  txt(mx(4), my(BR)+18, 'BAT+', 7.5, '#C4B5FD', 'middle', '700');
+  txt(mx(5), my(BR)+18, 'BAT\u2212', 7.5, '#9CA3AF', 'middle', '700');
+
+  // ═══════════════════════════════════════
+  // BOTTOM-SIDE WIRES (solid — physically here)
+  // ═══════════════════════════════════════
+
+  // SCL — L-shape on bottom
+  const sclR = XRS + 5;
+  const bnaSclR = BRS + 3;
+  solderPad(XL, sclR, '#F97316');
+  solderPad(BC, bnaSclR, '#F97316');
+  polyGlow2([[XL, sclR], [9, sclR], [9, bnaSclR], [BC, bnaSclR]], '#F97316', 4);
+  polyline2([[XL, sclR], [9, sclR], [9, bnaSclR], [BC, bnaSclR]], '#F97316', 3.5);
+  txt((mx(XL)+mx(BC))/2, my(sclR)+18, 'SCL \u2014 L-shape, bottom side', 8, '#F97316', 'middle', '700');
+
+  // GND — L-shape on bottom
+  solderPad(XR, XRS + 1, '#6B7280');
+  solderPad(BC, BRS + 2, '#6B7280');
+  polyGlow2([[XR, XRS+1], [9, XRS+1], [9, BRS+2], [BC, BRS+2]], '#6B7280', 3.5);
+  polyline2([[XR, XRS+1], [9, XRS+1], [9, BRS+2], [BC, BRS+2]], '#6B7280', 3);
+  txt(mx(9) - 18, my(BRS + 1), 'GND', 8, '#9CA3AF', 'end', '700');
+
+  // ═══════════════════════════════════════
+  // TOP-SIDE WIRES shown as faint dashed ghosts
+  // ═══════════════════════════════════════
+
+  // 3V3 → VIN (ghost)
+  polyline2([[XR, XRS+2],[9, XRS+2],[9, BRS],[BC, BRS]], 'rgba(52,211,153,0.2)', 1.5, true);
+
+  // SDA (ghost)
+  const sdaR = XRS + 4;
+  const bnaSdaR = BRS + 4;
+  polyline2([[XL, sdaR], [9, sdaR], [9, bnaSdaR], [BC, bnaSdaR]], 'rgba(251,191,36,0.2)', 1.5, true);
+  txt((mx(XL)+mx(BC))/2, my(sdaR)-12, 'SDA (top side)', 7, 'rgba(251,191,36,0.35)', 'middle', '500');
+
+  // Annotations
+  txt((mx(XL)+mx(BC))/2, my(sclR + 2.2), '\u2190 25.4 mm (10 holes, L-shape) \u2192', 8, '#8B7355', 'middle', '500');
+  txt(mx(6), my(0) - S/2 - 8, 'I2C crossing: SDA on top, SCL on bottom \u2014 cross at col J, opposite sides', 8, '#8B7355', 'middle', '500');
+})();
+</script>
+
+</body>
+</html>

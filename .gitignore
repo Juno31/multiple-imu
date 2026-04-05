@@ -1,0 +1,30 @@
+# Build artifacts
+**/build/
+**/sdkconfig.old
+**/dependencies.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Data files (generated at runtime)
+pc/imu_data.h5
+pc/imu_data.csv
+data/*.csv
+data/*.h5
+
+# Node names config (user-specific)
+# pc/node_names.json
+
+# Plans
+.claude/plans/

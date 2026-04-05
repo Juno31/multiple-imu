@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Multiple-IMU — Technical Documentation</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   Toss Design System — Documentation Page
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --bg-primary:    #17171c;
+  --bg-secondary:  #1e1e24;
+  --bg-tertiary:   #26262d;
+  --bg-elevated:   #2c2c35;
+  --text-primary:  #f2f4f6;
+  --text-secondary:#8b95a1;
+  --text-tertiary: #6b7684;
+  --text-disabled: #4e5968;
+  --blue:          #3182f6;
+  --blue-dim:      rgba(49,130,246,0.12);
+  --green:         #03b26c;
+  --green-dim:     rgba(3,178,108,0.12);
+  --red:           #f04452;
+  --red-dim:       rgba(240,68,82,0.12);
+  --amber:         #fe9800;
+  --amber-dim:     rgba(254,152,0,0.12);
+  --purple:        #a234c7;
+  --purple-dim:    rgba(162,52,199,0.12);
+  --radius-sm:     8px;
+  --radius-md:     12px;
+  --radius-lg:     16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Toss Product Sans', -apple-system, BlinkMacSystemFont,
+               'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* ── Layout ── */
+.doc-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 32px 120px;
+}
+
+/* ── Header ── */
+.doc-header {
+  margin-bottom: 48px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.doc-header h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+.doc-header .subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+.doc-header .tag-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+.tag-blue   { background: var(--blue-dim); color: var(--blue); }
+.tag-green  { background: var(--green-dim); color: var(--green); }
+.tag-amber  { background: var(--amber-dim); color: var(--amber); }
+.tag-purple { background: var(--purple-dim); color: var(--purple); }
+
+/* ── TOC ── */
+.toc {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 18px 22px;
+  margin-bottom: 40px;
+}
+.toc-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+}
+.toc a {
+  display: block;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 4px 0;
+  transition: color 0.12s;
+}
+.toc a:hover { color: var(--blue); }
+.toc a.indent { padding-left: 18px; font-size: 13px; color: var(--text-tertiary); }
+
+/* ── Sections ── */
+.section {
+  margin-bottom: 48px;
+}
+h2 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  padding-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+h2 .sec-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+  background: var(--blue-dim);
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin: 28px 0 12px;
+  letter-spacing: -0.01em;
+}
+p { margin-bottom: 14px; color: var(--text-secondary); }
+strong { color: var(--text-primary); font-weight: 700; }
+
+/* ── Tables ── */
+.doc-table-wrap {
+  overflow-x: auto;
+  margin: 16px 0 20px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+th {
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  white-space: nowrap;
+}
+td {
+  padding: 9px 14px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+td:first-child { color: var(--text-primary); font-weight: 600; }
+tr:hover td { background: rgba(255,255,255,0.015); }
+
+/* ── Code ── */
+code {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px;
+  background: var(--bg-tertiary);
+  padding: 2px 7px;
+  border-radius: 5px;
+  color: var(--blue);
+}
+pre {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  overflow-x: auto;
+  margin: 14px 0 20px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+pre code {
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+.kw { color: var(--purple); }
+.fn { color: var(--blue); }
+.num { color: var(--amber); }
+.str { color: var(--green); }
+.cm { color: var(--text-disabled); font-style: italic; }
+.type { color: #18a5a5; }
+
+/* ── Diagrams (pure CSS) ── */
+.diagram {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  margin: 20px 0 24px;
+  overflow-x: auto;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.diagram-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 18px;
+}
+
+/* Flow diagram */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+.flow-node {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  text-align: center;
+  min-width: 100px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.flow-node-name {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.flow-node-sub {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+.flow-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+.flow-arrow-line {
+  width: 36px;
+  height: 2px;
+  background: var(--text-disabled);
+  position: relative;
+}
+.flow-arrow-line::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  border: 5px solid transparent;
+  border-left: 6px solid var(--text-disabled);
+}
+.flow-arrow-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+/* State machine */
+.state-machine {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+.state-box {
+  border-radius: var(--radius-md);
+  padding: 16px 22px;
+  text-align: center;
+  min-width: 130px;
+  border: 2px solid;
+}
+.state-idle      { border-color: var(--text-disabled); background: rgba(78,89,104,0.08); }
+.state-connected { border-color: var(--amber); background: var(--amber-dim); }
+.state-streaming { border-color: var(--green); background: var(--green-dim); }
+.state-name {
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+.state-idle .state-name      { color: var(--text-tertiary); }
+.state-connected .state-name { color: var(--amber); }
+.state-streaming .state-name { color: var(--green); }
+.state-detail {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+.state-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 4px;
+  min-width: 70px;
+}
+.state-arrow-line {
+  width: 32px;
+  height: 2px;
+  background: var(--text-disabled);
+  position: relative;
+}
+.state-arrow-line::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  border: 5px solid transparent;
+  border-left: 6px solid var(--text-disabled);
+}
+.state-arrow-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 3px;
+  white-space: nowrap;
+}
+.state-arrow-back {
+  font-size: 9px;
+  color: var(--red);
+  margin-top: 3px;
+  white-space: nowrap;
+}
+
+/* Sync layer diagram */
+.sync-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.sync-layer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  margin-bottom: 2px;
+}
+.sync-layer:first-child { border-radius: var(--radius-md) var(--radius-md) 4px 4px; }
+.sync-layer:last-child  { border-radius: 4px 4px var(--radius-md) var(--radius-md); margin-bottom: 0; }
+.sync-layer-pc     { background: rgba(49,130,246,0.08); }
+.sync-layer-master { background: rgba(254,152,0,0.08); }
+.sync-layer-slave  { background: rgba(3,178,108,0.08); }
+.sync-layer-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.sync-layer-pc .sync-layer-icon     { background: var(--blue-dim); color: var(--blue); }
+.sync-layer-master .sync-layer-icon { background: var(--amber-dim); color: var(--amber); }
+.sync-layer-slave .sync-layer-icon  { background: var(--green-dim); color: var(--green); }
+.sync-layer-content { flex: 1; }
+.sync-layer-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.sync-layer-pc .sync-layer-title     { color: var(--blue); }
+.sync-layer-master .sync-layer-title { color: var(--amber); }
+.sync-layer-slave .sync-layer-title  { color: var(--green); }
+.sync-layer-eq {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.sync-arrow-down {
+  text-align: center;
+  padding: 4px 0;
+  color: var(--text-disabled);
+  font-size: 14px;
+}
+
+/* Equation blocks */
+.eq-block {
+  background: var(--bg-secondary);
+  border-left: 3px solid var(--blue);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 14px 18px;
+  margin: 14px 0 18px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.8;
+  overflow-x: auto;
+}
+.eq-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  font-family: inherit;
+  margin-bottom: 4px;
+}
+
+/* Badge */
+.badge-sm {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.badge-excellent { background: var(--green-dim); color: var(--green); }
+.badge-good      { background: var(--blue-dim); color: var(--blue); }
+.badge-warning   { background: var(--amber-dim); color: var(--amber); }
+.badge-bad       { background: var(--red-dim); color: var(--red); }
+
+/* Byte layout */
+.byte-row {
+  display: flex;
+  gap: 2px;
+  margin: 10px 0 6px;
+  flex-wrap: wrap;
+}
+.byte-cell {
+  border-radius: 5px;
+  padding: 6px 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'SF Mono', monospace;
+  min-width: 28px;
+  flex-shrink: 0;
+}
+.byte-magic  { background: var(--purple-dim); color: var(--purple); }
+.byte-data   { background: var(--blue-dim); color: var(--blue); }
+.byte-ts     { background: var(--amber-dim); color: var(--amber); flex: 1; min-width: 60px; }
+.byte-crc    { background: var(--red-dim); color: var(--red); }
+.byte-wide   { flex: 1; min-width: 80px; }
+.byte-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.byte-legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* Callout */
+.callout {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  margin: 16px 0;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.callout-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.callout-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .doc-wrap { padding: 28px 16px 80px; }
+  .doc-header h1 { font-size: 24px; }
+  .flow { flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .state-machine { flex-wrap: wrap; justify-content: center; gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="doc-wrap">
+
+<!-- ═══════════ Header ═══════════ -->
+<div class="doc-header">
+  <h1>Multiple-IMU System</h1>
+  <div class="subtitle">Technical Documentation &mdash; Distributed Multi-Node IMU Telemetry</div>
+  <div class="tag-row">
+    <span class="tag tag-blue">ESP-IDF v6.1</span>
+    <span class="tag tag-green">ESP-NOW</span>
+    <span class="tag tag-amber">BNO085</span>
+    <span class="tag tag-purple">WebSocket</span>
+  </div>
+</div>
+
+<!-- ═══════════ TOC ═══════════ -->
+<div class="toc">
+  <div class="toc-title">Contents</div>
+  <a href="#hw">1. Hardware Components</a>
+  <a href="#flow" class="indent">1.1 Connection Flow</a>
+  <a href="#frames" class="indent">1.2 Packet &amp; Frame Formats</a>
+  <a href="#sw">2. Software Components</a>
+  <a href="#states" class="indent">2.1 State Machine</a>
+  <a href="#commands" class="indent">2.2 Commands</a>
+  <a href="#tare" class="indent">2.3 Quaternion Tare</a>
+  <a href="#loss" class="indent">2.4 Connection Loss Detection</a>
+  <a href="#sync">3. Time Synchronization</a>
+  <a href="#sync-chain" class="indent">3.1 Sync Chain</a>
+  <a href="#sync-eq" class="indent">3.2 Equations</a>
+  <a href="#sync-error" class="indent">3.3 Sync Error Measurement</a>
+  <a href="#sync-accuracy" class="indent">3.4 Accuracy &amp; Limits</a>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     1. HARDWARE
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="hw">
+<h2><span class="sec-num">01</span> Hardware Components</h2>
+
+<div class="doc-table-wrap">
+<table>
+  <tr><th>Role</th><th>Board</th><th>MCU</th><th>Flash</th><th>Console</th></tr>
+  <tr><td>Master</td><td>XIAO ESP32-S3</td><td>ESP32-S3</td><td>8 MB</td><td>USB_SERIAL_JTAG</td></tr>
+  <tr><td>Slave &times;N</td><td>XIAO ESP32-C3</td><td>ESP32-C3</td><td>4 MB</td><td>USB CDC</td></tr>
+</table>
+</div>
+
+<div class="doc-table-wrap">
+<table>
+  <tr><th>IMU</th><th>Interface</th><th>Address</th><th>Pins</th><th>Clock</th></tr>
+  <tr><td>Adafruit BNO085</td><td>I2C (SHTP)</td><td>0x4A</td><td>SDA=GPIO6, SCL=GPIO7</td><td>400 kHz</td></tr>
+</table>
+</div>
+
+<p>Each slave runs <strong>identical firmware</strong>. Node identity is derived at boot from the last byte of the board's WiFi MAC address &mdash; no per-board configuration needed.</p>
+
+<div class="doc-table-wrap">
+<table>
+  <tr><th>Report</th><th>ID</th><th>Raw Format</th><th>Conversion</th><th>Unit</th></tr>
+  <tr><td>Rotation Vector</td><td>0x05</td><td>Q14 (int16)</td><td>&divide; 16384</td><td>quaternion</td></tr>
+  <tr><td>Linear Acceleration</td><td>0x04</td><td>Q8 (int16)</td><td>&divide; 256</td><td>m/s&sup2;</td></tr>
+  <tr><td>Calibrated Gyro</td><td>0x02</td><td>Q9 (int16)</td><td>&divide; 512</td><td>rad/s</td></tr>
+</table>
+</div>
+
+<h3 id="flow">1.1 Connection Flow</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Data Pipeline</div>
+  <div class="flow">
+    <div class="flow-node">
+      <div class="flow-node-name">BNO085</div>
+      <div class="flow-node-sub">IMU Sensor</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-label">I2C 400k</div>
+      <div class="flow-arrow-line"></div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-node-name">Slave</div>
+      <div class="flow-node-sub">ESP32-C3</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-label">ESP-NOW</div>
+      <div class="flow-arrow-line"></div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-node-name">Master</div>
+      <div class="flow-node-sub">ESP32-S3</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-label">USB 115.2k</div>
+      <div class="flow-arrow-line"></div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-node-name">Bridge</div>
+      <div class="flow-node-sub">Python</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-label">WebSocket</div>
+      <div class="flow-arrow-line"></div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-node-name">Browser</div>
+      <div class="flow-node-sub">Dashboard</div>
+    </div>
+  </div>
+</div>
+
+<div class="diagram">
+  <div class="diagram-title">Command Flow (Reverse)</div>
+  <div class="flow">
+    <div class="flow-node">
+      <div class="flow-node-name">Browser</div>
+      <div class="flow-node-sub">UI Controls</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-label">WS JSON</div>
+      <div class="flow-arrow-line"></div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-node-name">Bridge</div>
+      <div class="flow-node-sub">Text CMD</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-label">USB Serial</div>
+      <div class="flow-arrow-line"></div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-node-name">Master</div>
+      <div class="flow-node-sub">Parse &amp; Route</div>
+    </div>
+    <div class="flow-arrow">
+      <div class="flow-arrow-label">ESP-NOW</div>
+      <div class="flow-arrow-line"></div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-node-name">Slave(s)</div>
+      <div class="flow-node-sub">Execute</div>
+    </div>
+  </div>
+</div>
+
+
+<h3 id="frames">1.2 Packet &amp; Frame Formats</h3>
+
+<p><strong>IMU Frame</strong> &mdash; 57 bytes (master &rarr; PC via USB)</p>
+<div class="byte-legend">
+  <span><span class="byte-legend-dot" style="background:var(--purple)"></span>Magic</span>
+  <span><span class="byte-legend-dot" style="background:var(--blue)"></span>IMU Payload (50B)</span>
+  <span><span class="byte-legend-dot" style="background:var(--amber)"></span>Timestamp offset (4B)</span>
+  <span><span class="byte-legend-dot" style="background:var(--red)"></span>CRC8</span>
+</div>
+<div class="byte-row">
+  <div class="byte-cell byte-magic">0xAA</div>
+  <div class="byte-cell byte-magic">0x55</div>
+  <div class="byte-cell byte-data byte-wide">imu_packet_t &middot; 50 bytes</div>
+  <div class="byte-cell byte-ts">ts_ms (u32)</div>
+  <div class="byte-cell byte-crc">CRC</div>
+</div>
+
+<div class="doc-table-wrap">
+<table>
+  <tr><th>Offset</th><th>Size</th><th>Field</th><th>Type</th><th>Description</th></tr>
+  <tr><td>0</td><td>1</td><td>node_id</td><td>uint8</td><td>Slave identifier (MAC last byte)</td></tr>
+  <tr><td>1</td><td>1</td><td>calib</td><td>uint8</td><td>Reports received bitmask</td></tr>
+  <tr><td>2</td><td>4</td><td>timestamp_us</td><td>uint32</td><td>Slave clock + sync offset (&micro;s)</td></tr>
+  <tr><td>6</td><td>16</td><td>qi, qj, qk, qr</td><td>float&times;4</td><td>Rotation vector quaternion</td></tr>
+  <tr><td>22</td><td>4</td><td>quat_acc</td><td>float</td><td>Heading accuracy (rad)</td></tr>
+  <tr><td>26</td><td>12</td><td>ax, ay, az</td><td>float&times;3</td><td>Linear acceleration (m/s&sup2;)</td></tr>
+  <tr><td>38</td><td>12</td><td>gx, gy, gz</td><td>float&times;3</td><td>Calibrated gyro (rad/s)</td></tr>
+  <tr><td>50</td><td>4</td><td>timestamp_ms</td><td>uint32</td><td>Master-stamped ms since sync</td></tr>
+  <tr><td>54</td><td>1</td><td>CRC8</td><td>uint8</td><td>Poly 0x07, init 0x00</td></tr>
+</table>
+</div>
+
+<p><strong>Node-Event Frame</strong> &mdash; 11 bytes (master &rarr; PC via USB)</p>
+<div class="byte-row">
+  <div class="byte-cell byte-magic">0xAA</div>
+  <div class="byte-cell byte-magic">0xBB</div>
+  <div class="byte-cell byte-data">ID</div>
+  <div class="byte-cell byte-data">State</div>
+  <div class="byte-cell byte-data byte-wide">MAC Address &middot; 6 bytes</div>
+  <div class="byte-cell byte-crc">CRC</div>
+</div>
+
+<p><strong>Beacon Packet</strong> &mdash; 4 bytes (slave &rarr; master via ESP-NOW)</p>
+<div class="byte-row">
+  <div class="byte-cell byte-magic">0xB0</div>
+  <div class="byte-cell byte-data">ID</div>
+  <div class="byte-cell byte-data">State</div>
+  <div class="byte-cell byte-data">pad</div>
+</div>
+
+<p><strong>Command Packet</strong> &mdash; 8 bytes (master &rarr; slave via ESP-NOW)</p>
+<div class="byte-row">
+  <div class="byte-cell byte-data">cmd</div>
+  <div class="byte-cell byte-data">param</div>
+  <div class="byte-cell byte-data">pad</div>
+  <div class="byte-cell byte-data">pad</div>
+  <div class="byte-cell byte-ts">arg (u32) &middot; 4 bytes</div>
+</div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     2. SOFTWARE
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="sw">
+<h2><span class="sec-num">02</span> Software Components</h2>
+
+<h3 id="states">2.1 State Machine</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Node State Transitions</div>
+  <div class="state-machine">
+    <div class="state-box state-idle">
+      <div class="state-name">IDLE</div>
+      <div class="state-detail">Beacon 1s<br>BNO085 off</div>
+    </div>
+    <div class="state-arrow">
+      <div class="state-arrow-label">CMD_CONNECT</div>
+      <div class="state-arrow-line"></div>
+      <div class="state-arrow-back">&larr; CMD_DISCONNECT</div>
+    </div>
+    <div class="state-box state-connected">
+      <div class="state-name">CONNECTED</div>
+      <div class="state-detail">Beacon 5s<br>BNO085 ready</div>
+    </div>
+    <div class="state-arrow">
+      <div class="state-arrow-label">CMD_START</div>
+      <div class="state-arrow-line"></div>
+      <div class="state-arrow-back">&larr; CMD_STOP</div>
+    </div>
+    <div class="state-box state-streaming">
+      <div class="state-name">STREAMING</div>
+      <div class="state-detail">10&ndash;200 Hz<br>IMU packets</div>
+    </div>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="callout-icon">&#9888;</div>
+  <div class="callout-text"><strong>Auto-reset:</strong> If 20 consecutive ESP-NOW sends fail, the slave automatically returns to IDLE and resumes beaconing. The master rediscovers it on the next beacon.</div>
+</div>
+
+<h3 id="commands">2.2 Commands</h3>
+
+<div class="doc-table-wrap">
+<table>
+  <tr><th>Command</th><th>Hex</th><th>Param</th><th>Arg</th><th>Effect</th></tr>
+  <tr><td>CMD_RATE</td><td>0x01</td><td>Hz (10&ndash;200)</td><td>&mdash;</td><td>Change all report rates</td></tr>
+  <tr><td>CMD_START</td><td>0x02</td><td>&mdash;</td><td>&mdash;</td><td>Begin streaming</td></tr>
+  <tr><td>CMD_STOP</td><td>0x03</td><td>&mdash;</td><td>&mdash;</td><td>Pause streaming</td></tr>
+  <tr><td>CMD_CALIB</td><td>0x04</td><td>&mdash;</td><td>&mdash;</td><td>Tare orientation (streaming) or reinit (idle)</td></tr>
+  <tr><td>CMD_SYNC</td><td>0x05</td><td>&mdash;</td><td>master_us</td><td>Broadcast clock reference to slaves</td></tr>
+  <tr><td>CMD_CONNECT</td><td>0x06</td><td>&mdash;</td><td>&mdash;</td><td>Initialize BNO085, go CONNECTED</td></tr>
+  <tr><td>CMD_DISCONNECT</td><td>0x07</td><td>&mdash;</td><td>&mdash;</td><td>Stop streaming, go IDLE</td></tr>
+</table>
+</div>
+
+<p><strong>Serial text commands</strong> (PC &rarr; master over USB):</p>
+<pre><code><span class="str">RATE:&lt;hz&gt;</span>\n           <span class="cm">// all slaves change rate</span>
+<span class="str">START:&lt;node_id&gt;</span>\n     <span class="cm">// 255 = broadcast to all</span>
+<span class="str">STOP:&lt;node_id&gt;</span>\n
+<span class="str">CALIB:&lt;node_id&gt;</span>\n
+<span class="str">CONNECT:&lt;node_id&gt;</span>\n
+<span class="str">DISCONNECT:&lt;node_id&gt;</span>\n
+<span class="str">S&lt;epoch_ms&gt;</span>\n         <span class="cm">// PC time sync (e.g. S1712345678000)</span></code></pre>
+
+
+<h3 id="tare">2.3 Quaternion Tare</h3>
+
+<p>When <code>CMD_CALIB</code> is received during streaming, the slave captures the current orientation as a zero reference. Subsequent readings are rotated relative to this reference using the <strong>Hamilton product</strong> with the conjugate of the reference quaternion:</p>
+
+<div class="eq-block">
+<div class="eq-label">Tare equation</div>
+q<sub>out</sub> = q<sub>ref</sub><sup>-1</sup> &middot; q<sub>in</sub><br><br>
+where q<sub>ref</sub><sup>-1</sup> = conjugate = (&minus;i, &minus;j, &minus;k, +w)
+</div>
+
+<pre><code><span class="cm">// Hamilton product: q_out = q_ref_inv * q_in</span>
+<span class="type">float</span> ri = -g_ref_qi, rj = -g_ref_qj, rk = -g_ref_qk, rr = g_ref_qr;
+*or_ = rr*qr - ri*qi - rj*qj - rk*qk;
+*oi  = rr*qi + ri*qr + rj*qk - rk*qj;
+*oj  = rr*qj - ri*qk + rj*qr + rk*qi;
+*ok  = rr*qk + ri*qj - rj*qi + rk*qr;</code></pre>
+
+
+<h3 id="loss">2.4 Connection Loss Detection</h3>
+
+<p>The slave tracks consecutive ESP-NOW send failures via the send callback. After <strong>20 consecutive failures</strong> (<code>SEND_FAIL_THRESHOLD</code>), the slave resets to IDLE and resumes beacon transmission. The master rediscovers it automatically.</p>
+
+<pre><code><span class="kw">if</span> (status != ESP_NOW_SEND_SUCCESS) {
+    g_consec_send_fails++;
+    <span class="kw">if</span> (g_consec_send_fails >= <span class="num">20</span>) {
+        g_streaming  = <span class="kw">false</span>;
+        g_node_state = NODE_IDLE;  <span class="cm">// auto-reset</span>
+    }
+}</code></pre>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     3. TIME SYNCHRONIZATION
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="sync">
+<h2><span class="sec-num">03</span> Time Synchronization</h2>
+
+<p>The system synchronizes three independent clocks: <strong>PC wall-clock</strong>, <strong>master local timer</strong>, and <strong>slave local timers</strong>. This enables absolute timestamps in CSV recordings and inter-node sync monitoring.</p>
+
+<h3 id="sync-chain">3.1 Sync Chain</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Three-Layer Clock Synchronization</div>
+  <div class="sync-layers">
+    <div class="sync-layer sync-layer-pc">
+      <div class="sync-layer-icon">PC</div>
+      <div class="sync-layer-content">
+        <div class="sync-layer-title">PC Bridge (Python)</div>
+        <div style="font-size:12px;color:var(--text-secondary)">Sends wall-clock epoch over serial</div>
+        <div class="sync-layer-eq">S&lt;epoch_ms&gt;\n &rarr; e.g. S1712345678000</div>
+      </div>
+    </div>
+    <div class="sync-arrow-down">&darr; USB Serial &darr;</div>
+    <div class="sync-layer sync-layer-master">
+      <div class="sync-layer-icon">M</div>
+      <div class="sync-layer-content">
+        <div class="sync-layer-title">Master (ESP32-S3)</div>
+        <div style="font-size:12px;color:var(--text-secondary)">Stores sync reference, stamps every IMU frame with offset</div>
+        <div class="sync-layer-eq">g_sync_epoch_ms = epoch_ms<br>g_sync_master_us = esp_timer_get_time()</div>
+      </div>
+    </div>
+    <div class="sync-arrow-down">&darr; ESP-NOW CMD_SYNC &darr;</div>
+    <div class="sync-layer sync-layer-slave">
+      <div class="sync-layer-icon">S</div>
+      <div class="sync-layer-content">
+        <div class="sync-layer-title">Slave(s) (ESP32-C3)</div>
+        <div style="font-size:12px;color:var(--text-secondary)">Computes clock offset, applies to all outgoing timestamps</div>
+        <div class="sync-layer-eq">g_time_offset_us = master_ts &minus; slave_ts</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3 id="sync-eq">3.2 Equations</h3>
+
+<p><strong>Step 1 &mdash; PC &rarr; Master:</strong> Bridge sends current epoch (ms) over serial.</p>
+<div class="eq-block">
+<div class="eq-label">PC sync command</div>
+sync_epoch_ms = int(time.time() &times; 1000)<br>
+serial.write(f"S{sync_epoch_ms}\n")
+</div>
+
+<p><strong>Step 2 &mdash; Master stores reference:</strong> On receiving the sync command, the master captures both the PC epoch and its own local clock.</p>
+<div class="eq-block">
+<div class="eq-label">Master sync storage</div>
+g_sync_epoch_ms  = epoch_ms         <span style="color:var(--text-disabled)">// PC wall-clock (uint64)</span><br>
+g_sync_master_us = esp_timer_get_time()  <span style="color:var(--text-disabled)">// master local clock (&micro;s)</span>
+</div>
+
+<p><strong>Step 3 &mdash; Master stamps each frame:</strong> When forwarding a slave's IMU packet, the master appends its own time offset in milliseconds.</p>
+<div class="eq-block">
+<div class="eq-label">Master frame timestamp</div>
+ts_ms = (esp_timer_get_time() &minus; g_sync_master_us) / 1000
+</div>
+
+<p><strong>Step 4 &mdash; Master &rarr; Slaves:</strong> Master broadcasts its current <code>esp_timer_get_time()</code> to all slaves via <code>CMD_SYNC</code>.</p>
+<div class="eq-block">
+<div class="eq-label">Slave clock offset</div>
+g_time_offset_us = (int32_t)(master_ts &minus; slave_ts)
+</div>
+
+<p><strong>Step 5 &mdash; Slave timestamps:</strong> Each outgoing IMU packet carries the slave's local clock adjusted by the offset, aligning it with the master's timebase.</p>
+<div class="eq-block">
+<div class="eq-label">Slave timestamp generation</div>
+timestamp_us = (uint32_t)esp_timer_get_time() + (uint32_t)g_time_offset_us
+</div>
+
+<p><strong>Step 6 &mdash; Bridge reconstruction:</strong> The Python bridge reconstructs the absolute wall-clock epoch from the master's offset.</p>
+<div class="eq-block">
+<div class="eq-label">Absolute epoch reconstruction</div>
+absolute_ms = sync_epoch_ms + ts_offset_ms
+</div>
+
+<div class="callout">
+  <div class="callout-icon">&#128270;</div>
+  <div class="callout-text"><strong>Overflow note:</strong> PC epoch in 2026 &asymp; 1.7 trillion ms, which overflows <code>uint32_t</code>. The master stores the full <code>uint64_t</code> epoch but only transmits a <code>uint32_t</code> offset in each frame. The bridge holds the full epoch and reconstructs: <code>sync_epoch_ms + offset_ms</code>.</div>
+</div>
+
+
+<h3 id="sync-error">3.3 Sync Error Measurement</h3>
+
+<p>The dashboard overlay monitors two metrics in real time:</p>
+
+<p><strong>Per-node latency</strong> &mdash; how stale the data is at the browser:</p>
+<div class="eq-block">
+<div class="eq-label">Pipeline latency</div>
+latency_ms = Date.now() &minus; timestamp_ms
+</div>
+
+<p><strong>Inter-node sync error</strong> &mdash; the maximum clock delta between any two streaming nodes, compensated for packet arrival jitter:</p>
+<div class="eq-block">
+<div class="eq-label">Max inter-node delta</div>
+For each pair of nodes (i, j):<br><br>
+&Delta;arrival = arrival<sub>i</sub> &minus; arrival<sub>j</sub><br>
+&Delta;timestamp = timestamp_ms<sub>i</sub> &minus; timestamp_ms<sub>j</sub><br><br>
+error<sub>ij</sub> = |&Delta;timestamp &minus; &Delta;arrival|<br><br>
+max_delta = max(error<sub>ij</sub>) for all pairs
+</div>
+
+<p><strong>Threshold classification:</strong></p>
+<div class="doc-table-wrap">
+<table>
+  <tr><th>Range</th><th>Badge</th><th>Meaning</th></tr>
+  <tr><td>&lt; 5 ms</td><td><span class="badge-sm badge-excellent">&lt;5 ms</span></td><td>Excellent &mdash; well within real-time tolerance</td></tr>
+  <tr><td>5 &ndash; 10 ms</td><td><span class="badge-sm badge-good">5-10 ms</span></td><td>Good &mdash; acceptable for most applications</td></tr>
+  <tr><td>10 &ndash; 20 ms</td><td><span class="badge-sm badge-warning">10-20 ms</span></td><td>Warning &mdash; noticeable drift, consider re-sync</td></tr>
+  <tr><td>&gt; 20 ms</td><td><span class="badge-sm badge-bad">&gt;20 ms</span></td><td>Bad &mdash; significant desync, re-sync required</td></tr>
+</table>
+</div>
+
+
+<h3 id="sync-accuracy">3.4 Accuracy &amp; Limits</h3>
+
+<div class="doc-table-wrap">
+<table>
+  <tr><th>Source</th><th>Typical Latency</th><th>Notes</th></tr>
+  <tr><td>ESP-NOW transmission</td><td>1 &ndash; 3 ms</td><td>Channel contention adds jitter</td></tr>
+  <tr><td>USB serial buffering</td><td>1 &ndash; 5 ms</td><td>OS-level USB polling interval</td></tr>
+  <tr><td>Bridge processing</td><td>&lt; 1 ms</td><td>Python struct unpack + queue</td></tr>
+  <tr><td>WebSocket delivery</td><td>1 &ndash; 5 ms</td><td>Depends on browser event loop</td></tr>
+  <tr><td><strong>Total pipeline</strong></td><td><strong>~5 &ndash; 15 ms</strong></td><td>Sensor read to browser render</td></tr>
+  <tr><td>Inter-node sync error</td><td>&lt; 5 ms typical</td><td>After CMD_SYNC, before drift</td></tr>
+</table>
+</div>
+
+<div class="callout">
+  <div class="callout-icon">&#9200;</div>
+  <div class="callout-text"><strong>Clock drift:</strong> ESP32 crystal oscillators drift at approximately &plusmn;10 ppm. At 10 ppm, two unsynchronized clocks diverge by ~0.6 ms per minute. Periodic re-sync (every 5 minutes) keeps inter-node error well under 5 ms.</div>
+</div>
+
+<p><strong>CRC8 computation</strong> used for all frame integrity checks:</p>
+<pre><code><span class="type">uint8_t</span> <span class="fn">crc8</span>(<span class="kw">const</span> <span class="type">uint8_t</span> *data, <span class="type">size_t</span> len) {
+    <span class="type">uint8_t</span> crc = <span class="num">0x00</span>;
+    <span class="kw">for</span> (<span class="type">size_t</span> i = <span class="num">0</span>; i < len; i++) {
+        crc ^= data[i];
+        <span class="kw">for</span> (<span class="type">int</span> b = <span class="num">0</span>; b < <span class="num">8</span>; b++)
+            crc = (crc & <span class="num">0x80</span>) ? (crc << <span class="num">1</span>) ^ <span class="num">0x07</span> : (crc << <span class="num">1</span>);
+    }
+    <span class="kw">return</span> crc;
+}</code></pre>
+
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "IMU Bridge (HTTP + WebSocket)",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["/Users/ummm__31/Desktop/esp/projects/multiple-imu/pc/bridge.py"],
+      "port": 8080
+    }
+  ]
+}
